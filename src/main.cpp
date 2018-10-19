@@ -6,8 +6,9 @@ Robot Configuration:
 [Smart Port]    [Name]        [Type]           [Description]       [Reversed]
 Motor Port 1    LeftMotor     V5 Smart Motor    Left side motor     false
 Motor Port 10   RightMotor    V5 Smart Motor    Right side motor    true
-Motor Port 3    ArmMotor      V5 Smart Motor    Arm motor          false
-Motor Port 8    ClawMotor     V5 Smart Motor    Claw motor         false
+Motor Port 8    ArmMotor      V5 Smart Motor    Arm motor           false
+Motor Port 3    IntakeMotor   V5 Smart Motor    Intake motor        false
+Motor Port 5    ShooterMotor  V5 Smart Motor    Shooter motor       false
 ---------------------------------------------------------------------------*/
 
 //Creates a competition object that allows access to Competition methods.
@@ -40,10 +41,22 @@ void pre_auton( void ) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous( void ) {
-  // ..........................................................................
-  // Insert autonomous user code here.
-  // ..........................................................................
+    // ..........................................................................
+    // Insert autonomous user code here.
+    // ..........................................................................
+    int driveTime = 3000; // ms
+    int drivePower = 100;
 
+    // Drive forward
+    LeftMotor.spin(vex::directionType::fwd, drivePower, vex::velocityUnits::pct);
+    RightMotor.spin(vex::directionType::fwd, drivePower, vex::velocityUnits::pct);
+    
+    // Sleep
+    vex::task::sleep(driveTime);
+    
+    // Stop
+    LeftMotor.stop(vex::brakeType::brake);
+    RightMotor.stop(vex::brakeType::brake);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -59,7 +72,8 @@ void autonomous( void ) {
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
     int armSpeedPCT = 50;
-    int clawSpeedPCT = 50;
+    int intakeSpeedPCT = 50;
+    int shooterSpeedPCT = 50;
     // User control code here, inside the loop
     while (1) {
         // This is the main execution loop for the user control program.
@@ -69,8 +83,10 @@ void usercontrol( void ) {
         //Drive Control
         //Set the left and right motor to spin forward using the controller Axis values as the velocity value.
         //Since we are using a single joystick, we will need to calculate the final volicity for each motor.
-        LeftMotor.spin(vex::directionType::fwd, (Controller1.Axis3.value() + Controller1.Axis4.value())/2, vex::velocityUnits::pct); //(Axis3+Axis4)/2
-        RightMotor.spin(vex::directionType::fwd, (Controller1.Axis3.value() - Controller1.Axis4.value())/2, vex::velocityUnits::pct);//(Axis3-Axis4)/2
+        int power = Controller1.Axis3.value();
+        int rotation = Controller1.Axis1.value()/2;
+        LeftMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
+        RightMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
         
         //Arm Control
         if(Controller1.ButtonUp.pressing()) { //If button up is pressed...
@@ -86,19 +102,18 @@ void usercontrol( void ) {
             ArmMotor.stop(vex::brakeType::brake);
         }
         
-        //Claw Control
-        if(Controller1.ButtonA.pressing()) { //If the A button is pressed...
+        // Intake Control
+        if(Controller1.ButtonL1.pressing()) { //If the upper left trigger is pressed...
             //...Spin the claw motor forward.
-            ClawMotor.spin(vex::directionType::fwd, clawSpeedPCT, vex::velocityUnits::pct);
+            IntakeMotor.spin(vex::directionType::fwd, intakeSpeedPCT, vex::velocityUnits::pct);
         }
-        else if(Controller1.ButtonY.pressing()) { //If the Y button is pressed...
-            //...Spin the claw motor backward.
-            ClawMotor.spin(vex::directionType::rev, clawSpeedPCT, vex::velocityUnits::pct);
+        
+        // Shooter Control
+        if(Controller1.ButtonR1.pressing()) { //If the upper left trigger is pressed...
+            //...Spin the claw motor forward.
+            ShooterMotor.spin(vex::directionType::fwd, shooterSpeedPCT, vex::velocityUnits::pct);
         }
-        else { //If the A or Y button are not pressed...        
-            //...Stop the claw motor.
-            ClawMotor.stop(vex::brakeType::brake);        
-        }
+        
         vex::task::sleep(20); //Sleep the task for a short amount of time to prevent wasted resources. 
     }
 }
