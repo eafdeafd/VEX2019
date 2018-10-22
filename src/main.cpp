@@ -48,17 +48,17 @@ float wheelCircumference = wheelDiameter * 3.14159;
 void driveForward( float inches ) { // distance in inches
     float inchesPerDegree = wheelCircumference / 360;
     float degrees = inches / inchesPerDegree;
-    // TODO: make both move at same time
-    LeftMotor.rotateFor(degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightMotor.rotateFor(degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
+    // don't wait for completion so that other wheel can turn too
+    LeftMotor.startRotateFor(degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightMotor.rotateFor(degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 void turn( float degrees ) {
     float turningCircumference = turningDiameter * 3.14159;
     float turningRatio = turningCircumference / wheelCircumference;
-    // TODO: make both move at same time
-    LeftMotor.rotateFor(turningRatio * degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightMotor.rotateFor(-turningRatio * degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
+
+    LeftMotor.startRotateFor(turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct, false);
+    RightMotor.rotateFor(-turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 
