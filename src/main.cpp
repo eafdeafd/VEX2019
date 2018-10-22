@@ -39,20 +39,36 @@ void pre_auton( void ) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
+// Robot measurements
+float wheelDiameter = 4.125; // inches
+float turningDiameter = 25.0; //inches (top left wheel-bottom right wheel)
+
+float wheelCircumference = wheelDiameter * 3.14159;
+
+void driveForward( float inches ) { // distance in inches
+    float inchesPerDegree = wheelCircumference / 360;
+    float degrees = inches / inchesPerDegree;
+    // TODO: make both move at same time
+    LeftMotor.rotateFor(degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightMotor.rotateFor(degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
+}
+
+void turn( float degrees ) {
+    float turningCircumference = turningDiameter * 3.14159;
+    float turningRatio = turningCircumference / wheelCircumference;
+    // TODO: make both move at same time
+    LeftMotor.rotateFor(turningRatio * degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightMotor.rotateFor(-turningRatio * degrees, vex:rotationUnits::deg, 50, vex::velocityUnits::pct);
+}
+
 
 void autonomous( void ) {
     // ..........................................................................
     // Insert autonomous user code here.
     // ..........................................................................
-    int driveTime = 3000; // ms
-    int drivePower = 100;
-
-    // Drive forward
-    LeftMotor.spin(vex::directionType::fwd, drivePower, vex::velocityUnits::pct);
-    RightMotor.spin(vex::directionType::fwd, drivePower, vex::velocityUnits::pct);
-    
-    // Sleep
-    vex::task::sleep(driveTime);
+    driveForward( 1.2 * 12 );
+    turn(90);
+    driveForward( 4.0 * 12 );
     
     // Stop
     LeftMotor.stop(vex::brakeType::brake);
@@ -72,8 +88,8 @@ void autonomous( void ) {
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
     int armSpeedPCT = 50;
-    int intakeSpeedPCT = 50;
-    int shooterSpeedPCT = 50;
+    int intakeSpeedPCT = 100;
+    int shooterSpeedPCT = 100;
     // User control code here, inside the loop
     while (1) {
         // This is the main execution loop for the user control program.
@@ -106,12 +122,20 @@ void usercontrol( void ) {
         if(Controller1.ButtonL1.pressing()) { //If the upper left trigger is pressed...
             //...Spin the claw motor forward.
             IntakeMotor.spin(vex::directionType::fwd, intakeSpeedPCT, vex::velocityUnits::pct);
+        } else if(Controller1.ButtonL2.pressing()) {
+            IntakeMotor.spin(vex::directionType::fwd, -intakeSpeedPCT, vex::velocityUnits::pct);
+        } else {
+            //...Stop the arm motor.
+            IntakeMotor.spin(vex::directionType::fwd, 0, vex::velocityUnits::pct);
         }
         
         // Shooter Control
         if(Controller1.ButtonR1.pressing()) { //If the upper left trigger is pressed...
             //...Spin the claw motor forward.
             ShooterMotor.spin(vex::directionType::fwd, shooterSpeedPCT, vex::velocityUnits::pct);
+        } else {
+            //...Stop the arm motor.
+            ShooterMotor.spin(vex::directionType::fwd, 0, vex::velocityUnits::pct);
         }
         
         vex::task::sleep(20); //Sleep the task for a short amount of time to prevent wasted resources. 
