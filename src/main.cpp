@@ -40,10 +40,13 @@ void pre_auton( void ) {
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 // Robot measurements
-float wheelDiameter = 4.125; // inches
-float turningDiameter = 25.0; //inches (top left wheel-bottom right wheel)
+const float wheelDiameter = 4.125; // inches
+const float turningDiameter = 25.0; //inches (top left wheel-bottom right wheel)
 
-float wheelCircumference = wheelDiameter * 3.14159;
+const float wheelCircumference = wheelDiameter * 3.14159;
+
+const bool isBlue = false;
+const bool isRight = false;
 
 void driveForward( float inches ) { // distance in inches
     float inchesPerDegree = wheelCircumference / 360;
@@ -61,14 +64,34 @@ void turn( float degrees ) {
     RightMotor.rotateFor(-turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
+void shoot( void ) {
+    ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+}
+
 void autonomous( void ) {
-    // ..........................................................................
-    // Insert autonomous user code here.
-    // ..........................................................................
-    driveForward( 1.2 * 12 );
-    turn(90);
-    driveForward( 4.0 * 12 );
-    
+    if (isBlue && isRight) {
+        // Blue right (flag side)
+        driveForward( 1.2 * 12 );
+        turn(90);
+        shoot();
+        driveForward( 4.0 * 12 );
+    } else if (isBlue && !isRight) {
+        // Blue left
+        driveForward( 1.2 * 12 );
+        turn(90);
+        shoot();
+    } else if (!isBlue && !isRight) {
+        // Red left (flag side)
+        driveForward( 1.2 * 12 );
+        turn(-90);
+        shoot();
+        driveForward( 4.0 * 12 );
+    } else if (!isBlue && isRight) {
+        // Red Right
+        driveForward( 1.2 * 12 );
+        turn(-90);
+        shoot();
+    }
     // Stop
     LeftMotor.stop(vex::brakeType::brake);
     RightMotor.stop(vex::brakeType::brake);
