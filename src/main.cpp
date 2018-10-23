@@ -69,32 +69,17 @@ void shoot( void ) {
 }
 
 void autonomous( void ) {
-    if (isBlue && isRight) {
-        // Blue right (flag side)
-        driveForward( 1.2 * 12 );
+    driveForward( 1.2 * 12 );
+    if (isBlue) {
         turn(90);
-        shoot();
-        driveForward( 4.0 * 12 );
-    } else if (isBlue && !isRight) {
-        // Blue left
-        driveForward( 1.2 * 12 );
-        turn(90);
-        shoot();
-    } else if (!isBlue && !isRight) {
-        // Red left (flag side)
-        driveForward( 1.2 * 12 );
-        turn(-90);
-        shoot();
-        driveForward( 4.0 * 12 );
-    } else if (!isBlue && isRight) {
-        // Red Right
-        driveForward( 1.2 * 12 );
-        turn(-90);
-        shoot();
+    } else {
+        turn (-90);
     }
-    // Stop
-    LeftMotor.stop(vex::brakeType::brake);
-    RightMotor.stop(vex::brakeType::brake);
+    shoot();
+    // Flagside: blue, right or red, left
+    if (isBlue && isRight || !isBlue && !isRight) {
+        driveForward( 4.0 * 12 );
+    }
 }
 
 /*---------------------------------------------------------------------------*/
