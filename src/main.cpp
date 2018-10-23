@@ -57,10 +57,9 @@ void turn( float degrees ) {
     float turningCircumference = turningDiameter * 3.14159;
     float turningRatio = turningCircumference / wheelCircumference;
 
-    LeftMotor.startRotateFor(turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct, false);
+    LeftMotor.startRotateFor(turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
     RightMotor.rotateFor(-turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
-
 
 void autonomous( void ) {
     // ..........................................................................
