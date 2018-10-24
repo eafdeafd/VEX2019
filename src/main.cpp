@@ -41,7 +41,7 @@ void pre_auton( void ) {
 /*---------------------------------------------------------------------------*/
 // Robot measurements
 const float wheelDiameter = 4.125; // inches
-const float turningDiameter = 25.0; //inches (top left wheel-bottom right wheel)
+const float turningDiameter = 19.0; //inches (top left wheel-bottom right wheel)
 
 // Robot starting position
 const bool isBlue = false;
