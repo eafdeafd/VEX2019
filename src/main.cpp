@@ -4,8 +4,8 @@
 
 Robot Configuration:
 [Smart Port]    [Name]        [Type]           [Description]       [Reversed]
-Motor Port 1    LeftMotor     V5 Smart Motor    Left side motor     false
-Motor Port 10   RightMotor    V5 Smart Motor    Right side motor    true
+Motor Port 10   LeftMotor     V5 Smart Motor    Left side motor     true
+Motor Port 1    RightMotor    V5 Smart Motor    Right side motor    false
 Motor Port 8    ArmMotor      V5 Smart Motor    Arm motor           false
 Motor Port 3    IntakeMotor   V5 Smart Motor    Intake motor        false
 Motor Port 5    ShooterMotor  V5 Smart Motor    Shooter motor       false
@@ -59,10 +59,12 @@ void driveForward( float inches ) { // distance in inches
 }
 
 void turn( float degrees ) {
+    // Note: +90 degrees is a right turn
     float turningRatio = turningDiameter / wheelDiameter;
 
-    LeftMotor.startRotateFor(turningRatio * degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightMotor.rotateFor(-turningRatio * degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    // Divide by two because each wheel provides half the rotation
+    LeftMotor.startRotateFor(turningRatio * degrees * gearRatio / 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightMotor.rotateFor(-turningRatio * degrees * gearRatio / 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 void shoot( bool isFar ) {
@@ -118,8 +120,6 @@ void usercontrol( void ) {
         }
 
         //Drive Control
-        //Set the left and right motor to spin forward using the controller Axis values as the velocity value.
-        //Since we are using a single joystick, we will need to calculate the final volicity for each motor.
         int power = Controller1.Axis3.value();
         int rotation = Controller1.Axis1.value()/2;
         LeftMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
