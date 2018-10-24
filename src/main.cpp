@@ -64,21 +64,27 @@ void turn( float degrees ) {
     RightMotor.rotateFor(-turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
-void shoot( void ) {
-    ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, 100, vex::velocityUnits::pct);
+void shoot( bool isFar ) {
+    float power = isFar ? 120 : 100;
+
+    ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
 }
 
 void autonomous( void ) {
     driveForward( 1.2 * 12 );
+
     if (isBlue) {
         turn(90);
     } else {
         turn (-90);
     }
-    shoot();
+
     // Flagside: blue, right or red, left
     if (isBlue && isRight || !isBlue && !isRight) {
+        shoot(false);
         driveForward( 4.0 * 12 );
+    } else { // Not flagside, shoot far and don't drive
+        shoot(true);
     }
 }
 
