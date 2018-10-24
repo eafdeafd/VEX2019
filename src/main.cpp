@@ -42,6 +42,7 @@ void pre_auton( void ) {
 // Robot measurements
 const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 19.0; //inches (top left wheel-bottom right wheel)
+const float gearRatio = 0.5; // 0.5 turn of motor -> 1 turn of wheel
 
 // Robot starting position
 const bool isBlue = false;
@@ -53,15 +54,15 @@ void driveForward( float inches ) { // distance in inches
 
     float degrees = inches / inchesPerDegree;
     // don't wait for completion so that other wheel can turn at same time
-    LeftMotor.startRotateFor(degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightMotor.rotateFor(degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftMotor.startRotateFor(degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightMotor.rotateFor(degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 void turn( float degrees ) {
     float turningRatio = turningDiameter / wheelDiameter;
 
-    LeftMotor.startRotateFor(turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightMotor.rotateFor(-turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftMotor.startRotateFor(turningRatio * degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightMotor.rotateFor(-turningRatio * degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 void shoot( bool isFar ) {
