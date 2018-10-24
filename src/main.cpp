@@ -43,22 +43,22 @@ void pre_auton( void ) {
 const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 25.0; //inches (top left wheel-bottom right wheel)
 
-const float wheelCircumference = wheelDiameter * 3.14159;
-
+// Robot starting position
 const bool isBlue = false;
 const bool isRight = false;
 
 void driveForward( float inches ) { // distance in inches
+    float wheelCircumference = wheelDiameter * 3.14159;
     float inchesPerDegree = wheelCircumference / 360;
+
     float degrees = inches / inchesPerDegree;
-    // don't wait for completion so that other wheel can turn too
+    // don't wait for completion so that other wheel can turn at same time
     LeftMotor.startRotateFor(degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
     RightMotor.rotateFor(degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 void turn( float degrees ) {
-    float turningCircumference = turningDiameter * 3.14159;
-    float turningRatio = turningCircumference / wheelCircumference;
+    float turningRatio = turningDiameter / wheelDiameter;
 
     LeftMotor.startRotateFor(turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
     RightMotor.rotateFor(-turningRatio * degrees, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
@@ -103,6 +103,13 @@ void usercontrol( void ) {
         // Each time through the loop your program should update motor + servo 
         // values based on feedback from the joysticks.
 
+        // Quick Turn 90 degrees
+        if(Controller1.ButtonLeft.pressing()) {
+            turn(-90);
+        } else if (Controller1.ButtonRight.pressing()) {
+            turn(90);
+        }
+
         //Drive Control
         //Set the left and right motor to spin forward using the controller Axis values as the velocity value.
         //Since we are using a single joystick, we will need to calculate the final volicity for each motor.
@@ -136,6 +143,8 @@ void usercontrol( void ) {
             IntakeMotor.spin(vex::directionType::fwd, 0, vex::velocityUnits::pct);
         }
         
+        // TODO: stop intake momentarily when limit switch is hit
+
         // Shooter Control
         if(Controller1.ButtonR1.pressing()) { //If the upper left trigger is pressed...
             //...Spin the claw motor forward.
