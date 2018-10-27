@@ -66,8 +66,12 @@ void turn( float degrees ) {
     RightMotor.rotateFor(-turningRatio * degrees * gearRatio / 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
-void shoot( float power ) {
-    ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
+void shoot( float power, bool isAuton) {
+    if(isAuton){
+        ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
+    } else {
+        ShooterMotor.spin(vex::directionType::fwd, power, vex::velocityUnits::pct);
+    }
 }
 
 void moveArm(float armSpeed){
@@ -75,11 +79,13 @@ void moveArm(float armSpeed){
         ArmMotor.spin(vex::directionType::fwd, armSpeed, vex::velocityUnits::pct);
     } else if (armSpeed < 0){
         ArmMotor.spin(vex::directionType::rev, armSpeed, vex::velocityUnits::pct);
+    } else {
+        ArmMotor.stop(vex::brakeType::brake);
     }
 }
 
 void intake(float intakeSpeed){
-    if(intakeSpeed > 0){
+    if(intakeSpeed >= 0){
         IntakeMotor.spin(vex::directionType::fwd, intakeSpeed, vex::velocityUnits::pct);
     } else if (intakeSpeed < 0){
         IntakeMotor.spin(vex::directionType::rev, intakeSpeed, vex::velocityUnits::pct);
@@ -98,11 +104,11 @@ void autonomous( void ) {
     // Flagside: blue, right or red, left
     if ((isBlue && isRight) || (!isBlue && !isRight)) {
         float power = 100;
-        shoot(power);
+        shoot(power, true);
         driveForward( 4.0 * 12 );
     } else { // Not flagside, shoot far and don't drive
         float power = 120;
-        shoot(power);
+        shoot(power, true);
     }
 }
 
@@ -121,7 +127,7 @@ void usercontrol( void ) {
     int armSpeedPCT = 25;
     int intakeSpeedPCT = 100;
     int shooterSpeedPCT = 100;
-    // User control code here, inside the loop
+
     while (1) {
         // This is the main execution loop for the user control program.
         // Each time through the loop your program should update motor + servo 
@@ -150,31 +156,31 @@ void usercontrol( void ) {
             moveArm(-armSpeedPCT);
         }
         else { //If the the up or down button is not pressed...
-            //...Stop the arm motor.
-            ArmMotor.stop(vex::brakeType::brake);
+            //...Brake the arm motor.
+            moveArm(0);
         }
         
         // Intake Control
         if(Controller1.ButtonL1.pressing()) { //If the upper left trigger is pressed...
-            //...Spin the claw motor forward.
+            //...Spin the intake motor forward.
             intake(intakeSpeedPCT);
         } else if(Controller1.ButtonL2.pressing()) {
-            //...Spin the claw motor backward.
+            //...Spin the intake motor backward.
             intake(-intakeSpeedPCT);
         } else {
-            //...Stop the arm motor.
-            IntakeMotor.spin(vex::directionType::fwd, 0, vex::velocityUnits::pct);
+            //...Stop spinning intake motor.
+            intake(0);
         }
         
         // TODO: stop intake momentarily when limit switch is hit
 
         // Shooter Control
-        if(Controller1.ButtonR1.pressing()) { //If the upper left trigger is pressed...
-            //...Spin the claw motor forward.
-            shoot(shooterSpeedPCT);
+        if(Controller1.ButtonR1.pressing()) {
+            //...Spin the shooter motor forward.
+            shoot(shooterSpeedPCT, false);
         } else {
-            //...Stop the arm motor.
-            ShooterMotor.spin(vex::directionType::fwd, 0, vex::velocityUnits::pct);
+            //...Stop the shooter motor.
+            shoot(0, false);
         }
         
         vex::task::sleep(20); //Sleep the task for a short amount of time to prevent wasted resources. 
