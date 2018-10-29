@@ -75,21 +75,15 @@ void shoot( float power, bool isAuton) {
 }
 
 void moveArm(float armSpeed){
-    if(armSpeed > 0){
-        ArmMotor.spin(vex::directionType::fwd, armSpeed, vex::velocityUnits::pct);
-    } else if (armSpeed < 0){
-        ArmMotor.spin(vex::directionType::rev, armSpeed, vex::velocityUnits::pct);
-    } else {
+    if (armSpeed == 0) {
         ArmMotor.stop(vex::brakeType::brake);
+    } else {
+        ArmMotor.spin(vex::directionType::fwd, armSpeed, vex::velocityUnits::pct);
     }
 }
 
 void intake(float intakeSpeed){
-    if(intakeSpeed >= 0){
-        IntakeMotor.spin(vex::directionType::fwd, intakeSpeed, vex::velocityUnits::pct);
-    } else if (intakeSpeed < 0){
-        IntakeMotor.spin(vex::directionType::rev, intakeSpeed, vex::velocityUnits::pct);
-    }
+    IntakeMotor.spin(vex::directionType::fwd, intakeSpeed, vex::velocityUnits::pct);
 }
 
 void autonomous( void ) {
