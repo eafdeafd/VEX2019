@@ -122,6 +122,14 @@ void usercontrol( void ) {
     int intakeSpeedPCT = 100;
     int shooterSpeedPCT = 100;
 
+    bool isReversed = false;
+    Controller1.Screen.print("Welcome Abort Captain\nGet ready to rumble!!!");
+
+    Controller1.Screen.print("\nFORWARD MODE!");
+    Controller1.rumble("--..-");
+
+    bool wasXPressed = false;
+
     while (1) {
         // This is the main execution loop for the user control program.
         // Each time through the loop your program should update motor + servo 
@@ -137,9 +145,31 @@ void usercontrol( void ) {
         //Drive Control
         int power = Controller1.Axis3.value();
         int rotation = Controller1.Axis1.value()/2;
+
+        if (isReversed) {
+            power *= -1;
+        }
         LeftMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
         RightMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
-        
+
+        if (Controller1.ButtonX.pressing() && !wasXPressed) {
+            // Just started pressing X
+            // Switch modes
+            if (!isReversed) { // Wasn't reversed
+                // Change to reverse
+                isReversed = true;
+                // TODO: make a function to clear the screen between prints
+                Controller1.Screen.print("\nREVERSE MODE!");
+                Controller1.rumble("...");
+            } else { // Was reversed
+                // Change to forward
+                isReversed = false;
+                Controller1.Screen.print("\nFORWARD MODE!");
+                Controller1.rumble("...");
+            }
+        }
+        wasXPressed = Controller1.ButtonX.pressing();
+
         //Arm Control
         if(Controller1.ButtonUp.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
@@ -166,7 +196,7 @@ void usercontrol( void ) {
             intake(0);
         }
         
-        // TODO: stop intake momentarily when limit switch is hit
+        // TODO: stop intake, rumble remote momentarily when limit switch is hit
 
         // Shooter Control
         if(Controller1.ButtonR1.pressing()) {
