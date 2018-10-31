@@ -123,9 +123,13 @@ void usercontrol( void ) {
     int shooterSpeedPCT = 100;
 
     bool isReversed = false;
-    Controller1.Screen.print("Welcome Abort Captain\nGet ready to rumble!!!");
+    Controller1.Screen.print("Welcome Abort Captain");
+    Controller1.Screen.newLine();
+    Controller1.Screen.print("Get ready to rumble!!!");
+    Controller1.Screen.newLine();
 
-    Controller1.Screen.print("\nFORWARD MODE!");
+    Controller1.Screen.print("FORWARD MODE!");
+    Controller1.Screen.newLine();
     Controller1.rumble("--..-");
 
     bool wasXPressed = false;
@@ -159,12 +163,14 @@ void usercontrol( void ) {
                 // Change to reverse
                 isReversed = true;
                 // TODO: make a function to clear the screen between prints
-                Controller1.Screen.print("\nREVERSE MODE!");
+                Controller1.Screen.print("REVERSE MODE!");
+                Controller1.Screen.newLine();
                 Controller1.rumble("...");
             } else { // Was reversed
                 // Change to forward
                 isReversed = false;
-                Controller1.Screen.print("\nFORWARD MODE!");
+                Controller1.Screen.print("FORWARD MODE!");
+                Controller1.Screen.newLine();
                 Controller1.rumble("...");
             }
         }
