@@ -9,6 +9,7 @@ Motor Port 1    RightMotor    V5 Smart Motor    Right side motor    false
 Motor Port 8    ArmMotor      V5 Smart Motor    Arm motor           false
 Motor Port 3    IntakeMotor   V5 Smart Motor    Intake motor        false
 Motor Port 5    ShooterMotor  V5 Smart Motor    Shooter motor       false
+
 ---------------------------------------------------------------------------*/
 
 //Creates a competition object that allows access to Competition methods.
@@ -115,6 +116,9 @@ void autonomous( void ) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
+bool isLimitSwitchPressed( void ) {
+    return IntakeLimitSwitch.value() == 1;
+}
 
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
@@ -132,6 +136,10 @@ void usercontrol( void ) {
     Controller1.Screen.newLine();
     Controller1.rumble("--..-");
 
+    bool isIntakeDisabled = false;
+
+    bool wasIntakePressed = false;
+    bool wasLimitSwitchPressed = false;
     bool wasXPressed = false;
 
     while (1) {
@@ -191,18 +199,36 @@ void usercontrol( void ) {
         }
         
         // Intake Control
-        if(Controller1.ButtonL1.pressing()) { //If the upper left trigger is pressed...
-            //...Spin the intake motor forward.
-            intake(intakeSpeedPCT);
-        } else if(Controller1.ButtonL2.pressing()) {
-            //...Spin the intake motor backward.
-            intake(-intakeSpeedPCT);
-        } else {
-            //...Stop spinning intake motor.
+        if(isIntakeDisabled) {
             intake(0);
+        } else {
+            if(Controller1.ButtonL1.pressing()) { //If the upper left trigger is pressed...
+                //...Spin the intake motor forward.
+                intake(intakeSpeedPCT);
+            } else if(Controller1.ButtonL2.pressing()) {
+                //...Spin the intake motor backward.
+                intake(-intakeSpeedPCT);
+            } else {
+                //...Stop spinning intake motor.
+                intake(0);
+            }
         }
-        
-        // TODO: stop intake, rumble remote momentarily when limit switch is hit
+
+        if (isLimitSwitchPressed() && !wasIntakePressed) {
+            // limit switch not pressed -> pressed
+            if (!Controller1.ButtonR1.pressing()) {
+                // Not running shooter, disable the intake
+                isIntakeDisabled = true;
+                Controller1.rumble("..");
+                Controller1.Screen.print("Ball intaken");
+            }
+        }
+        if (Controller1.ButtonL1.pressing() && !wasIntakePressed) {
+            // button not pressed -> pressed
+            isIntakeDisabled = false;
+        }
+        wasLimitSwitchPressed = isLimitSwitchPressed();
+        wasIntakePressed = Controller1.ButtonL1.pressing();
 
         // Shooter Control
         if(Controller1.ButtonR1.pressing()) {
