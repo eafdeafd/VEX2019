@@ -3,12 +3,14 @@
         Description: Team 2585's VEX Control Software for 2018-19          
 
 Robot Configuration:
-[Smart Port]    [Name]        [Type]           [Description]       [Reversed]
-Motor Port 10   LeftMotor     V5 Smart Motor    Left side motor     true
-Motor Port 1    RightMotor    V5 Smart Motor    Right side motor    false
-Motor Port 8    ArmMotor      V5 Smart Motor    Arm motor           false
-Motor Port 3    IntakeMotor   V5 Smart Motor    Intake motor        false
-Motor Port 5    ShooterMotor  V5 Smart Motor    Shooter motor       false
+[Smart Port]   [Name]          [Type]            [Description]       [Reversed]
+Motor Port 10  LeftBackMotor   V5 Smart Motor    Left side motor     false
+Motor Port 9   LeftFrontMotor  V5 Smart Motor    Left side motor     false
+Motor Port 1   RightBackMotor  V5 Smart Motor    Right side motor    true
+Motor Port 2   RightFrontMotor V5 Smart Motor    Right side motor    true
+Motor Port 8   ArmMotor        V5 Smart Motor    Arm motor           false
+Motor Port 3   IntakeMotor     V5 Smart Motor    Intake motor        false
+Motor Port 5   ShooterMotor    V5 Smart Motor    Shooter motor       false
 
 ---------------------------------------------------------------------------*/
 
@@ -48,23 +50,31 @@ const float gearRatio = 0.5; // 0.5 turn of motor -> 1 turn of wheel
 const bool isBlue = false;
 const bool isRight = false;
 
+
 void driveForward( float inches ) { // distance in inches
     float wheelCircumference = wheelDiameter * 3.141592653589;
     float inchesPerDegree = wheelCircumference / 360;
 
-    float degrees = inches / inchesPerDegree;
+    float degreesTurn = inches / inchesPerDegree * gearRatio;
     // don't wait for completion so that other wheel can turn at same time
-    LeftMotor.startRotateFor(degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightMotor.rotateFor(degrees * gearRatio, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+
+    RightBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightFrontMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 void turn( float degrees ) {
     // Note: +90 degrees is a right turn
     float turningRatio = turningDiameter / wheelDiameter;
 
+    float degreesTurn = turningRatio * degrees * gearRatio / 2;
     // Divide by two because each wheel provides half the rotation
-    LeftMotor.startRotateFor(turningRatio * degrees * gearRatio / 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightMotor.rotateFor(-turningRatio * degrees * gearRatio / 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+
+    RightBackMotor.startRotateFor(-degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightFrontMotor.rotateFor(-degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
 void shoot( float power, bool isAuton) {
@@ -161,8 +171,11 @@ void usercontrol( void ) {
         if (isReversed) {
             power *= -1;
         }
-        LeftMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
-        RightMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
+        LeftBackMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
+        LeftFrontMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
+
+        RightBackMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
+        RightFrontMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
 
         if (Controller1.ButtonX.pressing() && !wasXPressed) {
             // Just started pressing X
@@ -170,7 +183,6 @@ void usercontrol( void ) {
             if (!isReversed) { // Wasn't reversed
                 // Change to reverse
                 isReversed = true;
-                // TODO: make a function to clear the screen between prints
                 Controller1.Screen.print("REVERSE MODE!");
                 Controller1.Screen.newLine();
                 Controller1.rumble("...");
