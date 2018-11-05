@@ -126,7 +126,7 @@ void autonomous( void ) {
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
 bool isLimitSwitchPressed( void ) {
-    return IntakeLimitSwitch.value() == 1;
+    return IntakeLimitSwitch.value() == 0;
 }
 
 void usercontrol( void ) {
