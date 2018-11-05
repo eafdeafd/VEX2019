@@ -1,4 +1,7 @@
 #include "robot-config.h"
+// Robot starting position
+const bool isBlue = false;
+const bool isRight = false;
 /*---------------------------------------------------------------------------                                        
         Description: Team 2585's VEX Control Software for 2018-19          
 
@@ -45,10 +48,6 @@ void pre_auton( void ) {
 const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 21.5; //inches (top left wheel-bottom right wheel)
 const float gearRatio = 0.5; // 0.5 turn of motor -> 1 turn of wheel
-
-// Robot starting position
-const bool isBlue = false;
-const bool isRight = false;
 
 
 void driveForward( float inches ) { // distance in inches
