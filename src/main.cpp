@@ -7,11 +7,11 @@ const bool isRight = false;
 
 Robot Configuration:
 [Smart Port]   [Name]          [Type]            [Description]       [Reversed]
-Motor Port 10  LeftBackMotor   V5 Smart Motor    Left side motor     false
-Motor Port 9   LeftFrontMotor  V5 Smart Motor    Left side motor     false
-Motor Port 1   RightBackMotor  V5 Smart Motor    Right side motor    true
-Motor Port 2   RightFrontMotor V5 Smart Motor    Right side motor    true
-Motor Port 8   ArmMotor        V5 Smart Motor    Arm motor           false
+Motor Port 1   LeftBackMotor   V5 Smart Motor    Left side motor     false
+Motor Port 2   LeftFrontMotor  V5 Smart Motor    Left side motor     false
+Motor Port 10  RightBackMotor  V5 Smart Motor    Right side motor    true
+Motor Port 9   RightFrontMotor V5 Smart Motor    Right side motor    true
+Motor Port 7   ArmMotor        V5 Smart Motor    Arm motor           false
 Motor Port 3   IntakeMotor     V5 Smart Motor    Intake motor        false
 Motor Port 5   ShooterMotor    V5 Smart Motor    Shooter motor       false
 
