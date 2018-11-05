@@ -133,10 +133,10 @@ void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
     int armSpeedPCT = 25;
     int intakeSpeedPCT = 127;
-    int shooterSpeedPCT = 100;
+    int shooterSpeedPCT = 127;
 
     bool isReversed = false;
-    Controller1.Screen.print("Welcome Abort Captain");
+    Controller1.Screen.print("Welcome Aboard!");
     Controller1.Screen.newLine();
     Controller1.Screen.print("Get ready to rumble!!!");
     Controller1.Screen.newLine();
