@@ -132,7 +132,7 @@ bool isLimitSwitchPressed( void ) {
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
     int armSpeedPCT = 25;
-    int intakeSpeedPCT = 100;
+    int intakeSpeedPCT = 127;
     int shooterSpeedPCT = 100;
 
     bool isReversed = false;
