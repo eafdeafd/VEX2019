@@ -11,7 +11,8 @@ Motor Port 1   LeftBackMotor   V5 Smart Motor    Left side motor     false
 Motor Port 2   LeftFrontMotor  V5 Smart Motor    Left side motor     false
 Motor Port 10  RightBackMotor  V5 Smart Motor    Right side motor    true
 Motor Port 9   RightFrontMotor V5 Smart Motor    Right side motor    true
-Motor Port 7   ArmMotor        V5 Smart Motor    Arm motor           false
+Motor Port 11  LowerArmMotor   V5 Smart Motor    Arm motor           false
+Motor Port 20  UpperArmMotor  V5 Smart Motor    Arm motor           false
 Motor Port 3   IntakeMotor     V5 Smart Motor    Intake motor        false
 Motor Port 5   ShooterMotor    V5 Smart Motor    Shooter motor       false
 
@@ -84,11 +85,19 @@ void shoot( float power, bool isAuton) {
     }
 }
 
-void moveArm(float armSpeed){
+void moveLowerArm(float armSpeed){
     if (armSpeed == 0) {
-        ArmMotor.stop(vex::brakeType::brake);
+        LowerArmMotor.stop(vex::brakeType::brake);
     } else {
-        ArmMotor.spin(vex::directionType::fwd, armSpeed, vex::velocityUnits::pct);
+        LowerArmMotor.spin(vex::directionType::fwd, armSpeed, vex::velocityUnits::pct);
+    }
+}
+
+void moveUpperArm(float armSpeed) {
+    if (armSpeed == 0) {
+        UpperArmMotor.stop(vex::brakeType::brake);
+    } else {
+        UpperArmMotor.spin(vex::directionType::fwd, armSpeed, vex::velocityUnits::pct);
     }
 }
 
@@ -131,7 +140,8 @@ bool isLimitSwitchPressed( void ) {
 
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
-    int armSpeedPCT = 25;
+    int lowerArmSpeedPCT = 25;
+    int upperArmSpeedPCT = 35;
     int intakeSpeedPCT = 127;
     int shooterSpeedPCT = 127;
 
@@ -149,7 +159,8 @@ void usercontrol( void ) {
 
     bool wasIntakePressed = false;
     bool wasLimitSwitchPressed = false;
-    bool wasXPressed = false;
+    bool wasUpPressed = false;
+    bool wasDownPressed = false;
 
     while (1) {
         // This is the main execution loop for the user control program.
@@ -176,37 +187,49 @@ void usercontrol( void ) {
         RightBackMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
         RightFrontMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
 
-        if (Controller1.ButtonX.pressing() && !wasXPressed) {
-            // Just started pressing X
-            // Switch modes
-            if (!isReversed) { // Wasn't reversed
-                // Change to reverse
-                isReversed = true;
-                Controller1.Screen.print("REVERSE MODE!");
-                Controller1.Screen.newLine();
-                Controller1.rumble("...");
-            } else { // Was reversed
-                // Change to forward
-                isReversed = false;
-                Controller1.Screen.print("FORWARD MODE!");
-                Controller1.Screen.newLine();
-                Controller1.rumble("...");
-            }
+        if (Controller1.ButtonUp.pressing() && !wasUpPressed) {
+            // Change to forward
+            isReversed = false;
+            Controller1.Screen.print("FORWARD MODE!");
+            Controller1.Screen.newLine();
+            Controller1.rumble("...");
+        } else if (Controller1.ButtonDown.pressing() && !wasDownPressed) {
+            // Change to reverse
+            isReversed = true;
+            Controller1.Screen.print("REVERSE MODE!");
+            Controller1.Screen.newLine();
+            Controller1.rumble("...");
         }
-        wasXPressed = Controller1.ButtonX.pressing();
 
-        //Arm Control
-        if(Controller1.ButtonUp.pressing()) { //If button up is pressed...
+        wasUpPressed = Controller1.ButtonUp.pressing();
+        wasDownPressed = Controller1.ButtonDown.pressing();
+
+        //Upper Arm Control: X is up, Y is down
+        if(Controller1.ButtonX.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
-            moveArm(armSpeedPCT);
+            moveUpperArm(upperArmSpeedPCT);
         }
-        else if(Controller1.ButtonDown.pressing()) { //If the down button is pressed...
+        else if(Controller1.ButtonY.pressing()) { //If the down button is pressed...
             //...Spin the arm motor backward.
-            moveArm(-armSpeedPCT);
+            moveUpperArm(-upperArmSpeedPCT);
         }
         else { //If the the up or down button is not pressed...
             //...Brake the arm motor.
-            moveArm(0);
+            moveUpperArm(0);
+        }
+
+        //Upper Arm Control: A is up, B is down
+        if(Controller1.ButtonA.pressing()) { //If button up is pressed...
+            //...Spin the arm motor forward.
+            moveLowerArm(lowerArmSpeedPCT);
+        }
+        else if(Controller1.ButtonB.pressing()) { //If the down button is pressed...
+            //...Spin the arm motor backward.
+            moveLowerArm(-lowerArmSpeedPCT);
+        }
+        else { //If the the up or down button is not pressed...
+            //...Brake the arm motor.
+            moveLowerArm(0);
         }
         
         // Intake Control
