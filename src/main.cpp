@@ -1,7 +1,4 @@
 #include "robot-config.h"
-// Robot starting position
-const bool isBlue = false;
-const bool isRight = false;
 /*---------------------------------------------------------------------------                                        
         Description: Team 2585's VEX Control Software for 2018-19          
 

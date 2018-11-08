@@ -12,3 +12,7 @@ vex::motor IntakeMotor = vex::motor(vex::PORT3);
 vex::motor ShooterMotor = vex::motor(vex::PORT5, true);
 vex::controller Controller1 = vex::controller();
 vex::digital_in IntakeLimitSwitch = vex::digital_in(Brain.ThreeWirePort.B);
+
+// Robot starting position
+const bool isBlue = false;
+const bool isRight = false;
