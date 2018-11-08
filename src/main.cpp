@@ -106,7 +106,7 @@ void intake(float intakeSpeed){
 }
 
 void autonomous( void ) {
-    driveForward( 1.2 * 12 );
+    driveForward( 1.2 * 12 ); // 1.2 ft * 12 in/ft
 
     if (isBlue) {
         turn(90);
@@ -208,12 +208,10 @@ void usercontrol( void ) {
         if(Controller1.ButtonX.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
             moveUpperArm(upperArmSpeedPCT);
-        }
-        else if(Controller1.ButtonY.pressing()) { //If the down button is pressed...
+        } else if(Controller1.ButtonY.pressing()) { //If the down button is pressed...
             //...Spin the arm motor backward.
             moveUpperArm(-upperArmSpeedPCT);
-        }
-        else { //If the the up or down button is not pressed...
+        } else { //If the the up or down button is not pressed...
             //...Brake the arm motor.
             moveUpperArm(0);
         }
@@ -222,12 +220,10 @@ void usercontrol( void ) {
         if(Controller1.ButtonA.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
             moveLowerArm(lowerArmSpeedPCT);
-        }
-        else if(Controller1.ButtonB.pressing()) { //If the down button is pressed...
+        } else if(Controller1.ButtonB.pressing()) { //If the down button is pressed...
             //...Spin the arm motor backward.
             moveLowerArm(-lowerArmSpeedPCT);
-        }
-        else { //If the the up or down button is not pressed...
+        } else { //If the the up or down button is not pressed...
             //...Brake the arm motor.
             moveLowerArm(0);
         }
@@ -251,12 +247,13 @@ void usercontrol( void ) {
         if (isLimitSwitchPressed() && !wasIntakePressed) {
             // limit switch not pressed -> pressed
             if (!Controller1.ButtonR1.pressing()) {
-                // Not running shooter, disable the intake
+                // Not running the shooter, disable the intake
                 isIntakeDisabled = true;
                 Controller1.rumble("..");
                 Controller1.Screen.print("Ball intaken");
             }
         }
+
         if (Controller1.ButtonL1.pressing() && !wasIntakePressed) {
             // button not pressed -> pressed
             isIntakeDisabled = false;
