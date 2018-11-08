@@ -12,7 +12,7 @@ Motor Port 2   LeftFrontMotor  V5 Smart Motor    Left side motor     false
 Motor Port 10  RightBackMotor  V5 Smart Motor    Right side motor    true
 Motor Port 9   RightFrontMotor V5 Smart Motor    Right side motor    true
 Motor Port 11  LowerArmMotor   V5 Smart Motor    Arm motor           false
-Motor Port 20  UpperArmMotor  V5 Smart Motor    Arm motor           false
+Motor Port 20  UpperArmMotor   V5 Smart Motor    Arm motor           false
 Motor Port 3   IntakeMotor     V5 Smart Motor    Intake motor        false
 Motor Port 5   ShooterMotor    V5 Smart Motor    Shooter motor       false
 
@@ -143,7 +143,7 @@ void usercontrol( void ) {
     int lowerArmSpeedPCT = 25;
     int upperArmSpeedPCT = 35;
     int intakeSpeedPCT = 127;
-    int shooterSpeedPCT = 127;
+    int shooterSpeedPCT = 100;
 
     bool isReversed = false;
     Controller1.Screen.print("Welcome Aboard!");
@@ -272,7 +272,7 @@ void usercontrol( void ) {
             //...Stop the shooter motor.
             shoot(0, false);
         }
-        
+
         vex::task::sleep(20); //Sleep the task for a short amount of time to prevent wasted resources. 
     }
 }
