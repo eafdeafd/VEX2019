@@ -86,7 +86,12 @@ void turn( float degrees ) {
 
 void shoot( float power, bool isAuton) {
     if(isAuton){
+        // Spin up the shooter
         ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
+        // Run the intake to bring the ball up
+        // At the same time, run the shooter to shoot the ball
+        IntakeMotor.startRotateFor(3.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
+        ShooterMotor.rotateFor(3.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
     } else {
         ShooterMotor.spin(vex::directionType::fwd, power, vex::velocityUnits::pct);
     }
@@ -182,10 +187,12 @@ void usercontrol( void ) {
             turn(-90);
             // turn(-180);
             //driveForward(-12);
+            //shoot(shooterSpeedPCT, true);
         } else if (Controller1.ButtonRight.pressing() && !wasRightPressed) {
             turn(90);
             // turn(180);
             //driveForward(12);
+            //shoot(shooterSpeedPCT, true);
         }
         wasLeftPressed = Controller1.ButtonLeft.pressing();
         wasRightPressed = Controller1.ButtonRight.pressing();
