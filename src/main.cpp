@@ -45,7 +45,7 @@ void pre_auton( void ) {
 // Robot measurements
 const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 21.5; //inches (top left wheel-bottom right wheel)
-const float gearRatio = 0.5; // 0.5 turn of motor -> 1 turn of wheel
+const float gearRatio = 0.5; // 1 turn of motor -> 2 turn of wheel
 
 
 void driveForward( float inches ) { // distance in inches
@@ -65,8 +65,9 @@ void turn( float degrees ) {
     // Note: +90 degrees is a right turn
     float turningRatio = turningDiameter / wheelDiameter;
 
-    float degreesTurn = turningRatio * degrees * gearRatio / 2;
-    // Divide by two because each wheel provides half the rotation
+    float degreesTurn = turningRatio * degrees * gearRatio / 2 * 4;
+    // Divide by two because each side provides half the rotation
+    // Multiply by 4 because????
     LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
     LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 
@@ -138,7 +139,7 @@ bool isLimitSwitchPressed( void ) {
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
     int lowerArmSpeedPCT = 25;
-    int upperArmSpeedPCT = 35;
+    int upperArmSpeedPCT = 25;
     int intakeSpeedPCT = 127;
     int shooterSpeedPCT = 100;
 
@@ -158,6 +159,8 @@ void usercontrol( void ) {
     bool wasLimitSwitchPressed = false;
     bool wasUpPressed = false;
     bool wasDownPressed = false;
+    bool wasLeftPressed = false; // todo: remove
+    bool wasRightPressed = false;
 
     while (1) {
         // This is the main execution loop for the user control program.
@@ -165,11 +168,13 @@ void usercontrol( void ) {
         // values based on feedback from the joysticks.
 
         // Quick Turn 90 degrees
-        if(Controller1.ButtonLeft.pressing()) {
+        if(Controller1.ButtonLeft.pressing() && !wasLeftPressed) {
             turn(-90);
-        } else if (Controller1.ButtonRight.pressing()) {
+        } else if (Controller1.ButtonRight.pressing() && !wasRightPressed) {
             turn(90);
         }
+        wasLeftPressed = Controller1.ButtonLeft.pressing();
+        wasRightPressed = Controller1.ButtonRight.pressing();
 
         //Drive Control
         int power = Controller1.Axis3.value();
@@ -204,7 +209,7 @@ void usercontrol( void ) {
         //Upper Arm Control: X is up, Y is down
         if(Controller1.ButtonX.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
-            moveUpperArm(upperArmSpeedPCT);
+            moveUpperArm(upperArmSpeedPCT * 2);
         } else if(Controller1.ButtonY.pressing()) { //If the down button is pressed...
             //...Spin the arm motor backward.
             moveUpperArm(-upperArmSpeedPCT);
@@ -216,7 +221,7 @@ void usercontrol( void ) {
         //Upper Arm Control: A is up, B is down
         if(Controller1.ButtonA.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
-            moveLowerArm(lowerArmSpeedPCT);
+            moveLowerArm(lowerArmSpeedPCT * 2);
         } else if(Controller1.ButtonB.pressing()) { //If the down button is pressed...
             //...Spin the arm motor backward.
             moveLowerArm(-lowerArmSpeedPCT);
@@ -266,7 +271,6 @@ void usercontrol( void ) {
             //...Stop the shooter motor.
             shoot(0, false);
         }
-
         vex::task::sleep(20); //Sleep the task for a short amount of time to prevent wasted resources. 
     }
 }
