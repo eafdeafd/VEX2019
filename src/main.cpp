@@ -45,19 +45,16 @@ void pre_auton( void ) {
 // Robot measurements
 const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 21.5; //inches (top left wheel-bottom right wheel)
-const float gearRatio = 0.5; // 1 turn of motor -> 2 turn of wheel
+const float gearRatio = 0.5; // 1 turn of motor -> 2 turns of wheel
 
 
 void driveForward( float inches ) { // distance in inches
     float wheelCircumference = wheelDiameter * 3.141592653589;
-    float inchesPerDegree = wheelCircumference / 360;
+    float inchesPerDegree = wheelCircumference / 360.0;
 
     float degreesTurn = inches / inchesPerDegree * gearRatio;
     // don't wait for completion so that other wheel can turn at same time
-    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
     LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-
-    RightBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
     RightFrontMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 }
 
@@ -65,14 +62,26 @@ void turn( float degrees ) {
     // Note: +90 degrees is a right turn
     float turningRatio = turningDiameter / wheelDiameter;
 
-    float degreesTurn = turningRatio * degrees * gearRatio / 2 * 4;
-    // Divide by two because each side provides half the rotation
-    // Multiply by 4 because????
-    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    float wheelDegreesTurn = turningRatio * degrees;
+    float motorDegreesTurn = wheelDegreesTurn * gearRatio;
 
-    RightBackMotor.startRotateFor(-degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightFrontMotor.rotateFor(-degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    // V1: Only power front motors
+    LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+
+ /*
+    // V3: only count degrees on one of the motors
+    RightFrontMotor.spin(vex::directionType::fwd, 50, vex::velocityUnits::pct);
+    LeftFrontMotor.rotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightFrontMotor.stop();
+
+    // VGarbage: power all motors
+    LeftBackMotor.startRotateFor(motorDegreesTurn * 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(motorDegreesTurn * 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+
+    RightBackMotor.startRotateFor(-motorDegreesTurn * 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightFrontMotor.rotateFor(-motorDegreesTurn * 2, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+*/
 }
 
 void shoot( float power, bool isAuton) {
@@ -155,23 +164,28 @@ void usercontrol( void ) {
 
     bool isIntakeDisabled = false;
 
+    // Keep track of past button state to detect inital presses
+    // TODO: change to callback functions
     bool wasIntakePressed = false;
     bool wasLimitSwitchPressed = false;
     bool wasUpPressed = false;
     bool wasDownPressed = false;
-    bool wasLeftPressed = false; // todo: remove
+    bool wasLeftPressed = false;
     bool wasRightPressed = false;
 
     while (1) {
         // This is the main execution loop for the user control program.
         // Each time through the loop your program should update motor + servo 
-        // values based on feedback from the joysticks.
 
         // Quick Turn 90 degrees
         if(Controller1.ButtonLeft.pressing() && !wasLeftPressed) {
             turn(-90);
+            // turn(-180);
+            //driveForward(-12);
         } else if (Controller1.ButtonRight.pressing() && !wasRightPressed) {
             turn(90);
+            // turn(180);
+            //driveForward(12);
         }
         wasLeftPressed = Controller1.ButtonLeft.pressing();
         wasRightPressed = Controller1.ButtonRight.pressing();
