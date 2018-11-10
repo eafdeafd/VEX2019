@@ -14,6 +14,10 @@ vex::controller Controller1 = vex::controller();
 vex::digital_in IntakeLimitSwitch = vex::digital_in(Brain.ThreeWirePort.B);
 
 // Robot starting position
+// ========== CHANGE TO TRUE BEFORE COMPETITION ==========
+const bool JUST_AUTON_TEST = false; // ONLY USE FOR TEST
+// =======================================================
+const bool shouldRunAuton = true;
+const bool justDriveStraight = true;
 const bool isBlue = false;
 const bool isRight = false;
-const bool justDriveStraight = true;

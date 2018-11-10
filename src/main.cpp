@@ -48,17 +48,17 @@ const float turningDiameter = 21.5; //inches (top left wheel-bottom right wheel)
 const float gearRatio = 0.5; // 1 turn of motor -> 2 turns of wheel
 
 
-void driveForward( float inches ) { // distance in inches
+void driveForward( float inches, float power ) { // distance in inches
     float wheelCircumference = wheelDiameter * 3.141592653589;
     float inchesPerDegree = wheelCircumference / 360.0;
 
     float degreesTurn = inches / inchesPerDegree * gearRatio;
     // don't wait for completion so that other wheel can turn at same time
-    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
-    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
+    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
 
-    RightFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
-    RightBackMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    RightFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
+    RightBackMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
 }
 
 void turn( float degrees ) {
@@ -129,9 +129,18 @@ void moveUpperArm(float armSpeed) {
 }
 
 void autonomous( void ) {
-    driveForward( 1.2 * 12 ); // 1.2 ft * 12 in/ft
-    if (justDriveStraight) {
+    if (!shouldRunAuton) {
         return;
+    }
+
+    if (justDriveStraight) {
+        intake(127.0);        
+        driveForward( 3.3 * 12, 50.0 ); // was 2.4
+        IntakeMotor.rotateFor(2.0, vex::timeUnits::sec, 127.0, vex::velocityUnits::pct);
+        intake(0.0);
+        return;
+    } else {
+        driveForward( 1.2 * 12, 110.0 ); // 1.2 ft * 12 in/ft
     }
 
     if (isBlue) {
@@ -144,9 +153,9 @@ void autonomous( void ) {
     if ((isBlue && isRight) || (!isBlue && !isRight)) {
         float power = 100;
         shoot(power, true);
-        driveForward( 4.0 * 12 );
+        driveForward( 4.0 * 12, 90.0 );
     } else { // Not flagside, shoot far and don't drive
-        float power = 120;
+        float power = 110;
         shoot(power, true);
     }
 }
@@ -167,7 +176,7 @@ bool isLimitSwitchPressed( void ) {
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm and claw.
     int lowerArmSpeedPCT = 25;
-    int upperArmSpeedPCT = 25;
+    int upperArmSpeedPCT = 40;
     int intakeSpeedPCT = 127;
     int shooterSpeedPCT = 100;
 
@@ -213,7 +222,7 @@ void usercontrol( void ) {
 
         //Drive Control
         int power = Controller1.Axis3.value();
-        int rotation = Controller1.Axis1.value()/2;
+        int rotation = Controller1.Axis1.value() * 0.4;
 
         if (isReversed) {
             power *= -1;
@@ -314,6 +323,11 @@ void usercontrol( void ) {
 // Main will set up the competition functions and callbacks.
 //
 int main() {
+    if (JUST_AUTON_TEST) {
+        autonomous();
+        return 0; // Stop running the program after the test
+    }
+
     //Run the pre-autonomous function. 
     pre_auton();
     
