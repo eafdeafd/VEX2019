@@ -67,13 +67,13 @@ void turn( float degrees ) {
 
     float wheelDegreesTurn = turningRatio * degrees;
     // Shouldn't need to be multiplied by 2. TODO: figure this out...
-    float motorDegreesTurn = wheelDegreesTurn * gearRatio * 2.0;
+    float motorDegreesTurn = wheelDegreesTurn * gearRatio;
 
-    LeftBackMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
-    LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    LeftBackMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 
-    RightBackMotor.startRotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
-    RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    RightBackMotor.startRotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
 
     // V1: Only power front motors
     //LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 100, vex::velocityUnits::pct);
@@ -207,12 +207,12 @@ void usercontrol( void ) {
 
         // Quick Turn 90 degrees
         if(Controller1.ButtonLeft.pressing() && !wasLeftPressed) {
-            turn(-90);
+            //turn(-90);
             // turn(-180);
             //driveForward(-12);
             //shoot(shooterSpeedPCT, true);
         } else if (Controller1.ButtonRight.pressing() && !wasRightPressed) {
-            turn(90);
+            //turn(90);
             // turn(180);
             //driveForward(12);
             //shoot(shooterSpeedPCT, true);
@@ -323,11 +323,6 @@ void usercontrol( void ) {
 // Main will set up the competition functions and callbacks.
 //
 int main() {
-    if (JUST_AUTON_TEST) {
-        autonomous();
-        return 0; // Stop running the program after the test
-    }
-
     //Run the pre-autonomous function. 
     pre_auton();
     
