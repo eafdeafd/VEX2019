@@ -16,3 +16,4 @@ vex::digital_in IntakeLimitSwitch = vex::digital_in(Brain.ThreeWirePort.B);
 // Robot starting position
 const bool isBlue = false;
 const bool isRight = false;
+const bool justDriveStraight = true;

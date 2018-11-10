@@ -54,8 +54,11 @@ void driveForward( float inches ) { // distance in inches
 
     float degreesTurn = inches / inchesPerDegree * gearRatio;
     // don't wait for completion so that other wheel can turn at same time
-    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightFrontMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+
+    RightFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    RightBackMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
 }
 
 void turn( float degrees ) {
@@ -63,11 +66,18 @@ void turn( float degrees ) {
     float turningRatio = turningDiameter / wheelDiameter;
 
     float wheelDegreesTurn = turningRatio * degrees;
-    float motorDegreesTurn = wheelDegreesTurn * gearRatio;
+    // Shouldn't need to be multiplied by 2. TODO: figure this out...
+    float motorDegreesTurn = wheelDegreesTurn * gearRatio * 2.0;
+
+    LeftBackMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+
+    RightBackMotor.startRotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
+    RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 120, vex::velocityUnits::pct);
 
     // V1: Only power front motors
-    LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    //LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 100, vex::velocityUnits::pct);
+    //RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 100, vex::velocityUnits::pct);
 
  /*
     // V3: only count degrees on one of the motors
@@ -84,14 +94,19 @@ void turn( float degrees ) {
 */
 }
 
+void intake(float intakeSpeed){
+    IntakeMotor.spin(vex::directionType::fwd, intakeSpeed, vex::velocityUnits::pct);
+}
+
 void shoot( float power, bool isAuton) {
     if(isAuton){
         // Spin up the shooter
         ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
         // Run the intake to bring the ball up
         // At the same time, run the shooter to shoot the ball
-        IntakeMotor.startRotateFor(3.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
+        intake(power);
         ShooterMotor.rotateFor(3.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
+        intake(0);
     } else {
         ShooterMotor.spin(vex::directionType::fwd, power, vex::velocityUnits::pct);
     }
@@ -113,12 +128,11 @@ void moveUpperArm(float armSpeed) {
     }
 }
 
-void intake(float intakeSpeed){
-    IntakeMotor.spin(vex::directionType::fwd, intakeSpeed, vex::velocityUnits::pct);
-}
-
 void autonomous( void ) {
     driveForward( 1.2 * 12 ); // 1.2 ft * 12 in/ft
+    if (justDriveStraight) {
+        return;
+    }
 
     if (isBlue) {
         turn(90);
@@ -285,7 +299,7 @@ void usercontrol( void ) {
         wasIntakePressed = Controller1.ButtonL1.pressing();
 
         // Shooter Control
-        if(Controller1.ButtonR1.pressing()) {
+        if(Controller1.ButtonR1.pressing() || Controller1.ButtonR2.pressing()) {
             //...Spin the shooter motor forward.
             shoot(shooterSpeedPCT, false);
         } else {
