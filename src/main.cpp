@@ -136,7 +136,7 @@ void autonomous( void ) {
     if (justDriveStraight) {
         intake(127.0);        
         driveForward( 3.3 * 12, 50.0 ); // was 2.4
-        IntakeMotor.rotateFor(2.0, vex::timeUnits::sec, 127.0, vex::velocityUnits::pct);
+        IntakeMotor.rotateFor(0.5, vex::timeUnits::sec, 127.0, vex::velocityUnits::pct);
         intake(0.0);
         return;
     } else {
