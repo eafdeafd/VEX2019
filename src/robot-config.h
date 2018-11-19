@@ -9,7 +9,7 @@ vex::motor RightFrontMotor = vex::motor(vex::PORT9, true);
 vex::motor ArmMotor = vex::motor(vex::PORT11);
 vex::motor Indexer = vex::motor(vex::PORT20);
 vex::motor IntakeMotor = vex::motor(vex::PORT3);
-vex::motor ShooterMotor = vex::motor(vex::PORT5, true);
+vex::motor ShooterMotor = vex::motor(vex::PORT5, false);
 vex::controller Controller1 = vex::controller();
 vex::digital_in IntakeLimitSwitch = vex::digital_in(Brain.ThreeWirePort.B);
 

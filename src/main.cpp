@@ -125,6 +125,14 @@ void moveArm(float armSpeed) {
     }
 }
 
+void turnIndexer(float indexSpeed){
+    if(indexSpeed == 0){
+        Indexer.stop(vex::brakeType::brake);
+    } else {
+        Indexer.spin(vex::directionType::fwd, indexSpeed, vex::velocityUnits::pct);
+    }
+}
+
 void autonomous( void ) {
     if (!shouldRunAuton) {
         return;
@@ -172,9 +180,9 @@ bool isLimitSwitchPressed( void ) {
 
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm, intake, and shooter.
-    int armSpeedPCT = 50;
+    int armSpeedPCT = 20;
     int intakeSpeedPCT = 127;
-    int targetShooterSpeedPCT = 100;
+    int indexSpeed = 60;
     int currentShooterSpeedPCT = 0;
     
     bool isReversed = false;
@@ -218,17 +226,17 @@ void usercontrol( void ) {
         wasRightPressed = Controller1.ButtonRight.pressing();
 
         //Drive Control
-        int power = Controller1.Axis3.value();
-        int rotation = Controller1.Axis1.value() * 0.4;
+        int powerPCT = Controller1.Axis3.value();
+        int rotationPCT = Controller1.Axis1.value() * 0.4;
 
         if (isReversed) {
-            power *= -1;
+            powerPCT *= -1;
         }
-        LeftBackMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
-        LeftFrontMotor.spin(vex::directionType::fwd, power + rotation, vex::velocityUnits::pct);
+        LeftBackMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
+        LeftFrontMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
 
-        RightBackMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
-        RightFrontMotor.spin(vex::directionType::fwd, power - rotation, vex::velocityUnits::pct);
+        RightBackMotor.spin(vex::directionType::fwd, powerPCT - rotationPCT, vex::velocityUnits::pct);
+        RightFrontMotor.spin(vex::directionType::fwd, powerPCT - rotationPCT, vex::velocityUnits::pct);
 
         if (Controller1.ButtonUp.pressing() && !wasUpPressed) {
             // Change to forward
@@ -248,10 +256,10 @@ void usercontrol( void ) {
         wasDownPressed = Controller1.ButtonDown.pressing();
 
         //Arm Control: X is up, Y is down
-        if(Controller1.ButtonX.pressing()) { //If button up is pressed...
+        if(Controller1.ButtonY.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
-            moveArm(armSpeedPCT * 2);
-        } else if(Controller1.ButtonY.pressing()) { //If the down button is pressed...
+            moveArm(armSpeedPCT);
+        } else if(Controller1.ButtonX.pressing()) { //If the down button is pressed...
             //...Spin the arm motor backward.
             moveArm(-armSpeedPCT);
         } else { //If the the up or down button is not pressed...
@@ -293,17 +301,27 @@ void usercontrol( void ) {
         wasIntakePressed = Controller1.ButtonL1.pressing();
 
         //Indexer Control: to-do(once we get more info on how it will work)
+        if(Controller1.ButtonA.pressing()) { //If button up is pressed...
+            //...Spin the arm motor forward.
+            turnIndexer(indexSpeed);
+        } else if(Controller1.ButtonB.pressing()) { //If the down button is pressed...
+            //...Spin the arm motor backward.
+            turnIndexer(-indexSpeed);
+        } else { //If the the up or down button is not pressed...
+            //...Brake the arm motor.
+            turnIndexer(0);
+        }
         
         // Shooter Control
         currentShooterSpeedPCT = ShooterMotor.velocity(vex::velocityUnits::pct);
         if(Controller1.ButtonR1.pressing() || Controller1.ButtonR2.pressing()) {
             //...Spin the shooter motor forward.
-            if(ShooterMotor.velocity(vex::velocityUnits::pct) < 95){
+            if(ShooterMotor.velocity(vex::velocityUnits::pct) < 120){
                 powerUpShooter(currentShooterSpeedPCT);
             } else {
                Controller1.rumble(".-.");
                Controller1.Screen.print("FULL POWER REACHED");
-               ShooterMotor.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
+               ShooterMotor.spin(vex::directionType::fwd, 127, vex::velocityUnits::pct);
            }    
         } else {
             //...Stop the shooter motor.
