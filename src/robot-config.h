@@ -11,10 +11,12 @@ vex::motor Feeder = vex::motor(vex::PORT20);
 vex::motor IntakeMotor = vex::motor(vex::PORT3);
 vex::motor ShooterMotor = vex::motor(vex::PORT5, false);
 vex::controller Controller1 = vex::controller();
-vex::digital_in IntakeLimitSwitch = vex::digital_in(Brain.ThreeWirePort.B);
+vex::vision VisionSensor (vex::PORT5);
 
-// Robot starting position
+const bool isProgrammingSkillsChallenge = false;
+
 const bool shouldRunAuton = true;
 const bool justDriveStraight = true;
+// Robot starting position
 const bool isBlue = false;
 const bool isRight = false;

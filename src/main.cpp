@@ -12,6 +12,7 @@ Motor Port 11  ArmMotor        V5 Smart Motor    Arm motor           false
 Motor Port 20  Feeder          V5 Smart Motor    Feeder              false
 Motor Port 3   IntakeMotor     V5 Smart Motor    Intake motor        false
 Motor Port 5   ShooterMotor    V5 Smart Motor    Shooter motor       false
+Motor Port 5   VisionSensor    V5 Vision Sensor  Vision sensor       N/A
 
 ---------------------------------------------------------------------------*/
 
@@ -33,15 +34,6 @@ void pre_auton( void ) {
   // Example: clearing encoders, setting servo positions, ...
 }
 
-/*---------------------------------------------------------------------------*/
-/*                                                                           */
-/*                              Autonomous Task                              */
-/*                                                                           */
-/*  This task is used to control your robot during the autonomous phase of   */
-/*  a VEX Competition.                                                       */
-/*                                                                           */
-/*  You must modify the code to add your own robot specific commands here.   */
-/*---------------------------------------------------------------------------*/
 // Robot measurements
 const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 17.5; //inches (top left wheel-bottom right wheel)
@@ -115,6 +107,51 @@ void runFeeder(float feederSpeed){
     }
 }
 
+void drive(float powerPCT, float rotationPCT) {
+    LeftBackMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
+    LeftFrontMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
+
+    RightBackMotor.spin(vex::directionType::fwd, powerPCT - rotationPCT, vex::velocityUnits::pct);
+    RightFrontMotor.spin(vex::directionType::fwd, powerPCT - rotationPCT, vex::velocityUnits::pct);
+}
+
+
+void pointToFlag() {
+    //camera image is 316 pixels wide, so the center is 316/2
+    int screenMiddleX = 316 / 2;
+    bool isLinedUp = false;
+    while(!isLinedUp) {
+        //snap a picture
+        VisionSensor.takeSnapshot(1); // 1 is green signature
+        //did we see anything?
+        if(VisionSensor.objectCount > 0) {
+            //where was the largest thing?
+            if(VisionSensor.largestObject.centerX < screenMiddleX - 5) {
+                //on the left, turn left
+                drive(0, -10);
+            } else if (VisionSensor.largestObject.centerX > screenMiddleX + 5) {
+                //on the right, turn right
+                drive(0, 10);
+            } else {
+                //in the middle, we're done lining up
+                isLinedUp = true;
+                drive(0, 0);
+            }
+        } else {
+            //saw nothing, relax
+            drive(0, 0);
+        }
+    }
+}
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
+/*                              Autonomous Task                              */
+/*                                                                           */
+/*  This task is used to control the robot during the autonomous phase of    */
+/*  a VEX Competition.                                                       */
+/*---------------------------------------------------------------------------*/
+
 void autonomous( void ) {
     if (!shouldRunAuton) {
         return;
@@ -149,6 +186,30 @@ void autonomous( void ) {
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
+/*                           Programming Skills                              */
+/*                                                                           */
+/*  This task is used to control the robot during the autonomous phase of    */
+/*  a VEX Competition. For use during programming skills event               */
+/*---------------------------------------------------------------------------*/
+
+void programmingSkills ( void ) {
+    // Drive forward
+    // Turn towards flag
+    // Finish pointing
+    pointToFlag();
+    // Shoot the ball
+    // Drive forward
+    // Back up
+    // Turn right
+    // Back Up to align and get a solid starting position
+    // Drive forward and intake
+    // Back up
+    // Turn right
+    // Drive forward to park
+}
+
+/*---------------------------------------------------------------------------*/
+/*                                                                           */
 /*                              User Control Task                            */
 /*                                                                           */
 /*  This task is used to control your robot during the user control phase of */
@@ -156,9 +217,6 @@ void autonomous( void ) {
 /*                                                                           */
 /*  You must modify the code to add your own robot specific commands here.   */
 /*---------------------------------------------------------------------------*/
-bool isLimitSwitchPressed( void ) {
-    return IntakeLimitSwitch.value() == 0;
-}
 
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm, intake, and shooter.
@@ -194,11 +252,7 @@ void usercontrol( void ) {
         if (isReversed) {
             powerPCT *= -1;
         }
-        LeftBackMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
-        LeftFrontMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
-
-        RightBackMotor.spin(vex::directionType::fwd, powerPCT - rotationPCT, vex::velocityUnits::pct);
-        RightFrontMotor.spin(vex::directionType::fwd, powerPCT - rotationPCT, vex::velocityUnits::pct);
+        drive(powerPCT, rotationPCT);
 
         if (Controller1.ButtonUp.pressing() && !wasUpPressed) {
             // Change to forward
@@ -279,9 +333,14 @@ void usercontrol( void ) {
 int main() {
     //Run the pre-autonomous function. 
     pre_auton();
-    
+
     //Set up callbacks for autonomous and driver control periods.
-    Competition.autonomous( autonomous );
+    if (isProgrammingSkillsChallenge) {
+        Competition.autonomous( programmingSkills );
+    } else {
+        Competition.autonomous( autonomous );
+    }
+
     Competition.drivercontrol( usercontrol );
 
     //Prevent main from exiting with an infinite loop.                        
