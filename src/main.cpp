@@ -39,59 +39,11 @@ const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 17.5; //inches (top left wheel-bottom right wheel)
 const float gearRatio = 1.0; // 1 turns of motor/turns of wheel
 
-
-void driveForward( float inches, float power ) { // distance in inches
-    float wheelCircumference = wheelDiameter * 3.141592653589;
-    float inchesPerDegree = wheelCircumference / 360.0;
-
-    float degreesTurn = inches / inchesPerDegree * gearRatio;
-    // don't wait for completion so that other wheel can turn at same time
-    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
-    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
-
-    RightFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
-    RightBackMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
-}
-
-void turn( float degrees ) {
-    // Note: +90 degrees is a right turn
-    float turningRatio = turningDiameter / wheelDiameter;
-
-    float wheelDegreesTurn = turningRatio * degrees;
-
-    float motorDegreesTurn = wheelDegreesTurn * gearRatio;
-
-    LeftBackMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-
-    RightBackMotor.startRotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-    RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
-}
-
-void intake(float intakeSpeed){
+void runIntake(float intakeSpeed){
     IntakeMotor.spin(vex::directionType::fwd, intakeSpeed, vex::velocityUnits::pct);
 }
 
-void shoot(float power) {
-    // Spin up the shooter
-    ShooterMotor.rotateFor(2.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
-    // Run the intake to bring the ball up
-    // At the same time, run the shooter to shoot the ball
-    intake(power);
-    ShooterMotor.rotateFor(3.0, vex::timeUnits::sec, power, vex::velocityUnits::pct);
-    intake(0);
-}
-
-void powerDownShooter(float velocityPCT){
-    ShooterMotor.setVelocity(velocityPCT - 1, vex::velocityUnits::pct);
-}          
-
-void powerUpShooter(float velocityPCT){
-    ShooterMotor.setVelocity(velocityPCT + 5, vex::velocityUnits::pct);
-
-}
-
-void moveArm(float armSpeed) {
+void runArm(float armSpeed) {
     if (armSpeed == 0) {
         ArmMotor.stop(vex::brakeType::brake);
     } else {
@@ -107,7 +59,7 @@ void runFeeder(float feederSpeed){
     }
 }
 
-void drive(float powerPCT, float rotationPCT) {
+void runDrive(float powerPCT, float rotationPCT) {
     //positive rotation --> turning right
     //negative rotation --> turning left
     LeftBackMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
@@ -117,6 +69,73 @@ void drive(float powerPCT, float rotationPCT) {
     RightFrontMotor.spin(vex::directionType::fwd, powerPCT - rotationPCT, vex::velocityUnits::pct);
 }
 
+void powerDownShooter(float velocityPCT){
+    ShooterMotor.setVelocity(velocityPCT - 1, vex::velocityUnits::pct);
+}
+
+void powerUpShooter(float velocityPCT){
+    ShooterMotor.setVelocity(velocityPCT + 5, vex::velocityUnits::pct);
+}
+
+void autoDriveForward( float inches, float power ) { // distance in inches
+    float wheelCircumference = wheelDiameter * 3.141592653589;
+    float inchesPerDegree = wheelCircumference / 360.0;
+
+    float degreesTurn = inches / inchesPerDegree * gearRatio;
+    // don't wait for completion so that other wheel can turn at same time
+    LeftFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
+    LeftBackMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
+
+    RightFrontMotor.startRotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
+    RightBackMotor.rotateFor(degreesTurn, vex::rotationUnits::deg, power, vex::velocityUnits::pct);
+}
+
+void autoTurn( float degrees ) {
+    // Note: +90 degrees is a right turn
+    float turningRatio = turningDiameter / wheelDiameter;
+    float wheelDegreesTurn = turningRatio * degrees;
+    float motorDegreesTurn = wheelDegreesTurn * gearRatio;
+
+    LeftBackMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+
+    RightBackMotor.startRotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+    RightFrontMotor.rotateFor(-motorDegreesTurn, vex::rotationUnits::deg, 50, vex::velocityUnits::pct);
+}
+
+void autoPowerUpShooter(float power) {
+    int shooterVelocity = ShooterMotor.velocity(vex::velocityUnits::pct);
+    while (shooterVelocity < power - 10) {
+        powerUpShooter(power);
+        shooterVelocity = ShooterMotor.velocity(vex::velocityUnits::pct);
+    }
+    ShooterMotor.spin(vex::directionType::fwd, power, vex::velocityUnits::pct);
+}
+
+void autoPowerDownShooter() {
+    int shooterVelocity = ShooterMotor.velocity(vex::velocityUnits::pct);
+    while (shooterVelocity > 10) {
+        powerDownShooter(0);
+        shooterVelocity = ShooterMotor.velocity(vex::velocityUnits::pct);
+    }
+    ShooterMotor.stop(vex::brakeType::coast);
+}
+
+void autoShoot(int shootPower) {
+    int intakePower = 100;
+    int feederPower = 60;
+    // Spin up the shooter
+    autoPowerUpShooter(shootPower);
+    vex::task::sleep(500);
+    // Run the intake and feeder to bring the ball up
+    runIntake(intakePower);
+    runFeeder(feederPower);
+    vex::task::sleep(2000);
+    // At the same time, run the shooter to shoot the ball
+    runIntake(0);
+    runFeeder(0);
+    autoPowerDownShooter();
+}
 
 void pointTo(vex::vision::signature sig) {
     //camera image is 316 pixels wide, so the center is 316/2
@@ -130,18 +149,18 @@ void pointTo(vex::vision::signature sig) {
             //where was the largest thing?
             if(VisionSensor.largestObject.centerX < screenMiddleX - 5) {
                 //on the left, turn left
-                drive(0, -10);
+                runDrive(0, -10);
             } else if (VisionSensor.largestObject.centerX > screenMiddleX + 5) {
                 //on the right, turn right
-                drive(0, 10);
+                runDrive(0, 10);
             } else {
                 //in the middle, we're done lining up
                 isLinedUp = true;
-                drive(0, 0);
+                runDrive(0, 0);
             }
         } else {
-            //saw nothing, relax
-            drive(10, 0);
+            //saw nothing, rotate
+            runDrive(10, 0);
         }
     }
 }
@@ -160,29 +179,29 @@ void autonomous( void ) {
     }
 
     if (justDriveStraight) {
-        intake(127.0);        
-        driveForward( 3.3 * 12, 50.0 ); // was 2.4
+        runIntake(100);
+        autoDriveForward( 3.3 * 12, 50.0 ); // was 2.4
         IntakeMotor.rotateFor(0.5, vex::timeUnits::sec, 127.0, vex::velocityUnits::pct);
-        intake(0.0);
+        runIntake(0);
         return;
     } else {
-        driveForward( 1.2 * 12, 110.0 ); // 1.2 ft * 12 in/ft
+        autoDriveForward( 1.2 * 12, 110.0 ); // 1.2 ft * 12 in/ft
     }
 
     if (isBlue) {
-        turn(90);
+        autoTurn(90);
     } else {
-        turn (-90);
+        autoTurn(-90);
     }
 
     // Flagside: blue, right or red, left
     if ((isBlue && isRight) || (!isBlue && !isRight)) {
-        float power = 100;
-        shoot(power);
-        driveForward( 4.0 * 12, 90.0 );
+        float power = 80;
+        autoShoot(power);
+        autoDriveForward( 4.0 * 12, 90.0 );
     } else { // Not flagside, shoot far and don't drive
-        float power = 110;
-        shoot(power);
+        float power = 100;
+        autoShoot(power);
     }
 }
 
@@ -224,8 +243,8 @@ void programmingSkills ( void ) {
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm, intake, and shooter.
     int armSpeedPCT = 30;
-    int intakeSpeedPCT = 127;
-    int feederSpeed = 60;
+    int intakeSpeedPCT = 100;
+    int feederSpeedPCT = 60;
     int currentShooterSpeedPCT = 0;
     
     bool isReversed = false;
@@ -237,7 +256,6 @@ void usercontrol( void ) {
     Controller1.Screen.print("FORWARD MODE!");
     Controller1.Screen.newLine();
     Controller1.rumble("--..-");
-
 
     // Keep track of past button state to detect inital presses
     bool wasIntakePressed = false;
@@ -255,7 +273,7 @@ void usercontrol( void ) {
         if (isReversed) {
             powerPCT *= -1;
         }
-        drive(powerPCT, rotationPCT);
+        runDrive(powerPCT, rotationPCT);
 
         if (Controller1.ButtonUp.pressing() && !wasUpPressed) {
             // Change to forward
@@ -276,33 +294,42 @@ void usercontrol( void ) {
         //Arm Control: X is up, Y is down
         if(Controller1.ButtonY.pressing()) { //If button up is pressed...
             //...Spin the arm motor forward.
-            moveArm(armSpeedPCT);
+            runArm(armSpeedPCT);
         } else if(Controller1.ButtonX.pressing()) { //If the down button is pressed...
             //...Spin the arm motor backward.
-            moveArm(-armSpeedPCT);
+            runArm(-armSpeedPCT);
         } else { //If the the up or down button is not pressed...
             //...Brake the arm motor.
-            moveArm(0);
+            runArm(0);
         }
 
         // Intake Control
         if(Controller1.ButtonL1.pressing()) { //If the upper left trigger is pressed...
             //...Spin the intake motor forward.
-            intake(intakeSpeedPCT);
+            runIntake(intakeSpeedPCT);
         } else if(Controller1.ButtonL2.pressing()) {
             //...Spin the intake motor backward.
-            intake(-intakeSpeedPCT);
+            runIntake(-intakeSpeedPCT);
         } else {
             //...Stop spinning intake motor.
-            intake(0);
+            runIntake(0);
         }
         wasIntakePressed = Controller1.ButtonL1.pressing();
 
         //Feeder Control
         if(Controller1.ButtonA.pressing()) {
-            runFeeder(feederSpeed);
+            runFeeder(feederSpeedPCT);
         } else if(Controller1.ButtonB.pressing()) {
-            runFeeder(-feederSpeed);
+            runFeeder(-feederSpeedPCT);
+        } else {
+            runFeeder(0);
+        }
+
+        //Feeder Control
+        if(Controller1.ButtonA.pressing()) {
+            runFeeder(feederSpeedPCT);
+        } else if(Controller1.ButtonB.pressing()) {
+            runFeeder(-feederSpeedPCT);
         } else {
             runFeeder(0);
         }
@@ -326,6 +353,7 @@ void usercontrol( void ) {
                ShooterMotor.spin(vex::directionType::fwd, 0, vex::velocityUnits::pct);
             }
         }
+
         vex::task::sleep(30); //Sleep the task for a short amount of time to prevent wasted resources. 
     }
 }
