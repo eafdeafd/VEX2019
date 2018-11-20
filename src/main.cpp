@@ -11,7 +11,7 @@ Motor Port 9   RightFrontMotor V5 Smart Motor    Right side motor    true
 Motor Port 11  ArmMotor        V5 Smart Motor    Arm motor           false
 Motor Port 20  Feeder          V5 Smart Motor    Feeder              false
 Motor Port 3   IntakeMotor     V5 Smart Motor    Intake motor        false
-Motor Port 5   ShooterMotor    V5 Smart Motor    Shooter motor       false
+Motor Port 7   ShooterMotor    V5 Smart Motor    Shooter motor       false
 Motor Port 5   VisionSensor    V5 Vision Sensor  Vision sensor       N/A
 
 ---------------------------------------------------------------------------*/
@@ -108,6 +108,8 @@ void runFeeder(float feederSpeed){
 }
 
 void drive(float powerPCT, float rotationPCT) {
+    //positive rotation --> turning right
+    //negative rotation --> turning left
     LeftBackMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
     LeftFrontMotor.spin(vex::directionType::fwd, powerPCT + rotationPCT, vex::velocityUnits::pct);
 
@@ -116,13 +118,13 @@ void drive(float powerPCT, float rotationPCT) {
 }
 
 
-void pointToFlag() {
+void pointTo(vex::vision::signature sig) {
     //camera image is 316 pixels wide, so the center is 316/2
     int screenMiddleX = 316 / 2;
     bool isLinedUp = false;
     while(!isLinedUp) {
         //snap a picture
-        VisionSensor.takeSnapshot(1); // 1 is green signature
+        VisionSensor.takeSnapshot(sig);
         //did we see anything?
         if(VisionSensor.objectCount > 0) {
             //where was the largest thing?
@@ -139,7 +141,7 @@ void pointToFlag() {
             }
         } else {
             //saw nothing, relax
-            drive(0, 0);
+            drive(10, 0);
         }
     }
 }
@@ -196,7 +198,7 @@ void programmingSkills ( void ) {
     // Drive forward
     // Turn towards flag
     // Finish pointing
-    pointToFlag();
+    pointTo(BLUE_OBJ);
     // Shoot the ball
     // Drive forward
     // Back up
@@ -206,6 +208,7 @@ void programmingSkills ( void ) {
     // Back up
     // Turn right
     // Drive forward to park
+    ArmMotor.rotateFor(2, vex::timeUnits::sec, 10, vex::velocityUnits::pct);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -220,7 +223,7 @@ void programmingSkills ( void ) {
 
 void usercontrol( void ) {
     //Use these variables to set the speed of the arm, intake, and shooter.
-    int armSpeedPCT = 20;
+    int armSpeedPCT = 30;
     int intakeSpeedPCT = 127;
     int feederSpeed = 60;
     int currentShooterSpeedPCT = 0;
@@ -240,7 +243,7 @@ void usercontrol( void ) {
     bool wasIntakePressed = false;
     bool wasUpPressed = false;
     bool wasDownPressed = false;
-
+    
     while (1) {
         // This is the main execution loop for the user control program.
         // Each time through the loop your program should update motor + servo
