@@ -70,11 +70,11 @@ void runDrive(float powerPCT, float rotationPCT) {
 }
 
 void powerDownShooter(float velocityPCT){
-    ShooterMotor.setVelocity(velocityPCT - 1, vex::velocityUnits::pct);
+    ShooterMotor.setVelocity(velocityPCT - 0.5, vex::velocityUnits::pct);
 }
 
 void powerUpShooter(float velocityPCT){
-    ShooterMotor.setVelocity(velocityPCT + 5, vex::velocityUnits::pct);
+    ShooterMotor.setVelocity(velocityPCT + 8, vex::velocityUnits::pct);
 }
 
 void autoDriveForward( float inches, float power ) { // distance in inches
@@ -108,6 +108,7 @@ void autoPowerUpShooter(float power) {
     while (shooterVelocity < power - 10) {
         powerUpShooter(power);
         shooterVelocity = ShooterMotor.velocity(vex::velocityUnits::pct);
+        vex::task::sleep(10);
     }
     ShooterMotor.spin(vex::directionType::fwd, power, vex::velocityUnits::pct);
 }
@@ -160,7 +161,35 @@ void pointTo(vex::vision::signature sig) {
             }
         } else {
             //saw nothing, rotate
-            runDrive(10, 0);
+            runDrive(0, -40);
+        }
+    }
+}
+
+void pointToDrive(vex::vision::signature sig){
+    //camera image is 316 pixels wide, so the center is 316/2
+    int screenMiddleX = 316 / 2;
+    bool isLinedUp = false;
+    while(!isLinedUp) {
+        //snap a picture
+        VisionSensor.takeSnapshot(sig);
+        //did we see anything?
+        if(VisionSensor.objectCount > 0) {
+            //where was the largest thing?
+            if(VisionSensor.largestObject.centerX < screenMiddleX - 5) {
+                //on the left, turn left
+                runDrive(30, -10);
+            } else if (VisionSensor.largestObject.centerX > screenMiddleX + 5) {
+                //on the right, turn right
+                runDrive(30, 10);
+            } else {
+                //in the middle, we're done lining up
+                isLinedUp = true;
+                runDrive(30, 0);
+            }
+        } else {
+            //saw nothing, rotate
+            runDrive(0, 40);
         }
     }
 }
@@ -184,27 +213,57 @@ void autonomous( void ) {
         IntakeMotor.rotateFor(0.5, vex::timeUnits::sec, 127.0, vex::velocityUnits::pct);
         runIntake(0);
         return;
-    } else {
-        autoDriveForward( 1.2 * 12, 110.0 ); // 1.2 ft * 12 in/ft
-    }
+    }// else {
+    //    autoDriveForward( 1.2 * 12, 110.0 ); // 1.2 ft * 12 in/ft
+    //}
 
-    if (isBlue) {
-        autoTurn(90);
-    } else {
-        autoTurn(-90);
-    }
+    //if (isBlue) {
+    //    autoTurn(90);
+    //} else {
+    //    autoTurn(-90);
+    //}
 
     // Flagside: blue, right or red, left
-    if ((isBlue && isRight) || (!isBlue && !isRight)) {
-        float power = 80;
-        autoShoot(power);
-        autoDriveForward( 4.0 * 12, 90.0 );
-    } else { // Not flagside, shoot far and don't drive
-        float power = 100;
-        autoShoot(power);
-    }
+    //if ((isBlue && isRight) || (!isBlue && !isRight)) {
+    //    float power = 80;
+    //    autoShoot(power);
+    //    autoDriveForward( 4.0 * 12, 90.0 );
+    //} else { // Not flagside, shoot far and don't drive
+    //    float power = 100;
+    //    autoShoot(power);
+    //}
+   // int currentVel = ShooterMotor.velocity(vex::velocityUnits::pct);
+    //while(currentVel < 80){
+    //    powerUpShooter(currentVel);
+    //    currentVel = ShooterMotor.velocity(vex::velocityUnits::pct);
+    //}
+    ShooterMotor.spin(vex::directionType::fwd, 100, vex::velocityUnits::pct);
+    runDrive(60, 0);
+    vex::task::sleep(700);
+    runDrive(0, 0);
+    vex::task::sleep(5000);
+    
+    IntakeMotor.startRotateFor(100, vex::rotationUnits::rev, 100, vex::velocityUnits::pct);
+    Feeder.startRotateFor(10, vex::rotationUnits::rev, 60, vex::velocityUnits::pct);
+    vex::task::sleep(4000);
+    IntakeMotor.stop(vex::brakeType::coast);
+    Feeder.stop(vex::brakeType::coast);
+    ShooterMotor.stop(vex::brakeType::coast);
+    
+    pointTo(GREEN_FLAG);
+    runDrive(40, 0);
+    vex::task::sleep(3000);
+    
+    runDrive(-60, 0);
+    vex::task::sleep(1500);
+    
+    pointTo(BLUE_OBJ);
+    IntakeMotor.setReversed(true);
+    IntakeMotor.startRotateFor(50, vex::rotationUnits::rev, 100, vex::velocityUnits::pct);
+    pointToDrive(BLUE_OBJ);
+    vex::task::sleep(2000);
+    IntakeMotor.stop(vex::brakeType::coast);
 }
-
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
 /*                           Programming Skills                              */
@@ -217,7 +276,6 @@ void programmingSkills ( void ) {
     // Drive forward
     // Turn towards flag
     // Finish pointing
-    pointTo(BLUE_OBJ);
     // Shoot the ball
     // Drive forward
     // Back up
@@ -227,7 +285,6 @@ void programmingSkills ( void ) {
     // Back up
     // Turn right
     // Drive forward to park
-    ArmMotor.rotateFor(2, vex::timeUnits::sec, 10, vex::velocityUnits::pct);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -268,7 +325,7 @@ void usercontrol( void ) {
 
         //Drive Control
         int powerPCT = Controller1.Axis3.value();
-        int rotationPCT = Controller1.Axis1.value() * 0.4;
+        int rotationPCT = Controller1.Axis1.value() * 0.3;
 
         if (isReversed) {
             powerPCT *= -1;
@@ -338,7 +395,7 @@ void usercontrol( void ) {
         currentShooterSpeedPCT = ShooterMotor.velocity(vex::velocityUnits::pct);
         if(Controller1.ButtonR1.pressing() || Controller1.ButtonR2.pressing()) {
             //...Spin the shooter motor forward.
-            if(ShooterMotor.velocity(vex::velocityUnits::pct) < 100){
+            if(ShooterMotor.velocity(vex::velocityUnits::pct) < 90){
                 powerUpShooter(currentShooterSpeedPCT);
             } else {
                Controller1.rumble(".-.");
