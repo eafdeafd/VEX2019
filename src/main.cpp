@@ -32,12 +32,24 @@ competition    Competition;
 void pre_auton( void ) {
   // All activities that occur before the competition starts
   // Example: clearing encoders, setting servo positions, ...
+  LeftBackMotor.resetRotation();
+  LeftFrontMotor.resetRotation();
+  RightBackMotor.resetRotation();
+  RightFrontMotor.resetRotation();
 }
 
 // Robot measurements
 const float wheelDiameter = 4.125; // inches
 const float turningDiameter = 17.5; //inches (top left wheel-bottom right wheel)
 const float gearRatio = 1.0; // 1 turns of motor/turns of wheel
+const float wheelCircumference = wheelDiameter * 3.141592653589;
+const float inchesPerDegree = wheelCircumference / 360.0;
+//calibration
+const float encoderTicksPerDegree = turningDiameter/wheelDiameter; // 3.135
+//1110 ticks = 360 Degrees
+//573 ticks = 180 degrees
+//283 ticks = 90 degrees
+//encoderTicksPerDegree = 283 / 90 or 1110 / 360 or 573 / 180
 
 void runIntake(float intakeSpeed){
     IntakeMotor.spin(directionType::fwd, intakeSpeed, velocityUnits::pct);
@@ -78,29 +90,43 @@ void powerUpShooter(float velocityPCT){
 }
 
 void autoDriveForward( float inches, float power ) { // distance in inches
-    float wheelCircumference = wheelDiameter * 3.141592653589;
-    float inchesPerDegree = wheelCircumference / 360.0;
-
     float degreesTurn = inches / inchesPerDegree * gearRatio;
-    // don't wait for completion so that other wheel can turn at same time
-    LeftFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-    LeftBackMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+    Controller1.Screen.print(inches);
+    if(inches < 0){
+        Brain.Screen.print("Backwards");
+        LeftFrontMotor.setReversed(true);
+        LeftBackMotor.setReversed(true);
+        RightFrontMotor.setReversed(false);
+        RightBackMotor.setReversed(false);
 
-    RightFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-    RightBackMotor.rotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+        LeftFrontMotor.startRotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+        LeftBackMotor.startRotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+
+        RightFrontMotor.startRotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+        RightBackMotor.rotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+    } else {
+        LeftFrontMotor.setReversed(false);
+        LeftBackMotor.setReversed(false);
+        RightFrontMotor.setReversed(true);
+        RightBackMotor.setReversed(true);
+        LeftFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+        LeftBackMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+
+        RightFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+        RightBackMotor.rotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+    }
 }
+    // don't wait for completion so that other wheel can turn at same time
+    
 
 void autoTurn( float degrees ) {
     // Note: +90 degrees is a right turn
-    float turningRatio = turningDiameter / wheelDiameter;
-    float wheelDegreesTurn = turningRatio * degrees;
-    float motorDegreesTurn = wheelDegreesTurn * gearRatio;
+    float encoderDegrees = encoderTicksPerDegree * degrees;
+    LeftBackMotor.startRotateFor(encoderDegrees, rotationUnits::deg, 50, velocityUnits::pct);
+    LeftFrontMotor.startRotateFor(encoderDegrees, rotationUnits::deg, 50, velocityUnits::pct);
 
-    LeftBackMotor.startRotateFor(motorDegreesTurn, rotationUnits::deg, 50, velocityUnits::pct);
-    LeftFrontMotor.startRotateFor(motorDegreesTurn, rotationUnits::deg, 50, velocityUnits::pct);
-
-    RightBackMotor.startRotateFor(-motorDegreesTurn, rotationUnits::deg, 50, velocityUnits::pct);
-    RightFrontMotor.rotateFor(-motorDegreesTurn, rotationUnits::deg, 50, velocityUnits::pct);
+    RightBackMotor.startRotateFor(-encoderDegrees, rotationUnits::deg, 50, velocityUnits::pct);
+    RightFrontMotor.rotateFor(-encoderDegrees, rotationUnits::deg, 50, velocityUnits::pct);
 }
 
 void autoPowerUpShooter(float power) {
@@ -160,36 +186,7 @@ void pointTo(vision::signature sig) {
                 runDrive(0, 0);
             }
         } else {
-            //saw nothing, rotate
-            runDrive(0, -40);
-        }
-    }
-}
-
-void pointToDrive(vision::signature sig){
-    //camera image is 316 pixels wide, so the center is 316/2
-    int screenMiddleX = 316 / 2;
-    bool isLinedUp = false;
-    while(!isLinedUp) {
-        //snap a picture
-        VisionSensor.takeSnapshot(sig);
-        //did we see anything?
-        if(VisionSensor.objectCount > 0) {
-            //where was the largest thing?
-            if(VisionSensor.largestObject.centerX < screenMiddleX - 5) {
-                //on the left, turn left
-                runDrive(30, -10);
-            } else if (VisionSensor.largestObject.centerX > screenMiddleX + 5) {
-                //on the right, turn right
-                runDrive(30, 10);
-            } else {
-                //in the middle, we're done lining up
-                isLinedUp = true;
-                runDrive(30, 0);
-            }
-        } else {
-            //saw nothing, rotate
-            runDrive(0, 40);
+            return;
         }
     }
 }
@@ -203,66 +200,59 @@ void pointToDrive(vision::signature sig){
 /*---------------------------------------------------------------------------*/
 
 void autonomous( void ) {
-    if (!shouldRunAuton) {
+    if(isFront){
+        ShooterMotor.spin(directionType::fwd, 100, velocityUnits::pct);
+        autoDriveForward(24, 25);
+        task::sleep(3000);
+
+        IntakeMotor.startRotateFor(100, rotationUnits::rev, 100, velocityUnits::pct);
+        Feeder.startRotateFor(10, rotationUnits::rev, 60, velocityUnits::pct);
+        task::sleep(2000);
+        IntakeMotor.stop(brakeType::coast);
+        Feeder.stop(brakeType::coast);
+        ShooterMotor.stop(brakeType::coast);
+        autoDriveForward(24, 30);
+        autoDriveForward(-24, 50);
+        //if(isBlue){
+        //    autoTurn(-80);
+        //} else if(isRed){
+        //    autoTurn(80);
+        //}
+        //autoDriveForward(-6, 50);
+        //ArmMotor.spin(directionType::rev, 20, velocityUnits::pct);
+        //task::sleep(1000);
+        //ArmMotor.spin(directionType::fwd, 20, velocityUnits::pct);
+        //autoDriveForward(12, 50);
+        
+        //if(isBlue){
+        //    autoTurn(80);
+        //} else if(isRed){
+        //    autoTurn(-80);
+        //}
+        
+        autoDriveForward(-50, 100);
+        
+        if(isBlue){
+            autoTurn(-90);
+        } else if (isRed){
+            autoTurn(90);
+        }
+
+        ArmMotor.spin(directionType::rev, 20, velocityUnits::pct);
+        task::sleep(500);
+        ArmMotor.stop(brakeType::brake);
+        
+        autoDriveForward(-80, 100);
+
+    } else if(isBack){
+        autoDriveForward(-24, 75);
+        IntakeMotor.spin(directionType::fwd, 100, velocityUnits::pct);
+        autoDriveForward(-12, 75);
+        task::sleep(1000);
+        return;
+    } else {
         return;
     }
-
-    if (justDriveStraight) {
-        runIntake(100);
-        autoDriveForward( 3.3 * 12, 50.0 ); // was 2.4
-        IntakeMotor.rotateFor(0.5, timeUnits::sec, 127.0, velocityUnits::pct);
-        runIntake(0);
-        return;
-    }// else {
-    //    autoDriveForward( 1.2 * 12, 110.0 ); // 1.2 ft * 12 in/ft
-    //}
-
-    //if (isBlue) {
-    //    autoTurn(90);
-    //} else {
-    //    autoTurn(-90);
-    //}
-
-    // Flagside: blue, right or red, left
-    //if ((isBlue && isRight) || (!isBlue && !isRight)) {
-    //    float power = 80;
-    //    autoShoot(power);
-    //    autoDriveForward( 4.0 * 12, 90.0 );
-    //} else { // Not flagside, shoot far and don't drive
-    //    float power = 100;
-    //    autoShoot(power);
-    //}
-   // int currentVel = ShooterMotor.velocity(velocityUnits::pct);
-    //while(currentVel < 80){
-    //    powerUpShooter(currentVel);
-    //    currentVel = ShooterMotor.velocity(velocityUnits::pct);
-    //}
-    ShooterMotor.spin(directionType::fwd, 100, velocityUnits::pct);
-    runDrive(60, 0);
-    task::sleep(700);
-    runDrive(0, 0);
-    task::sleep(5000);
-    
-    IntakeMotor.startRotateFor(100, rotationUnits::rev, 100, velocityUnits::pct);
-    Feeder.startRotateFor(10, rotationUnits::rev, 60, velocityUnits::pct);
-    task::sleep(4000);
-    IntakeMotor.stop(brakeType::coast);
-    Feeder.stop(brakeType::coast);
-    ShooterMotor.stop(brakeType::coast);
-    
-    pointTo(GREEN_FLAG);
-    runDrive(40, 0);
-    task::sleep(3000);
-    
-    runDrive(-60, 0);
-    task::sleep(1500);
-    
-    pointTo(BLUE_OBJ);
-    IntakeMotor.setReversed(true);
-    IntakeMotor.startRotateFor(50, rotationUnits::rev, 100, velocityUnits::pct);
-    pointToDrive(BLUE_OBJ);
-    task::sleep(2000);
-    IntakeMotor.stop(brakeType::coast);
 }
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
@@ -298,13 +288,18 @@ void programmingSkills ( void ) {
 /*---------------------------------------------------------------------------*/
 
 void usercontrol( void ) {
+    LeftBackMotor.setReversed(false);
+    LeftFrontMotor.setReversed(false);
+    RightBackMotor.setReversed(true);
+    RightFrontMotor.setReversed(true);
     //Use these variables to set the speed of the arm, intake, and shooter.
-    int armSpeedPCT = 30;
+    int armSpeedPCT = 20;
     int intakeSpeedPCT = 100;
     int feederSpeedPCT = 60;
     int currentShooterSpeedPCT = 0;
     
     bool isReversed = false;
+    bool shouldShoot = false;
     Controller1.Screen.print("Welcome Aboard!");
     Controller1.Screen.newLine();
     Controller1.Screen.print("Get ready to rumble!!!");
@@ -325,7 +320,7 @@ void usercontrol( void ) {
 
         //Drive Control
         int powerPCT = Controller1.Axis3.value();
-        int rotationPCT = Controller1.Axis1.value() * 0.3;
+        int rotationPCT = Controller1.Axis1.value() * 0.25;
 
         if (isReversed) {
             powerPCT *= -1;
@@ -393,7 +388,12 @@ void usercontrol( void ) {
 
         // Shooter Control
         currentShooterSpeedPCT = ShooterMotor.velocity(velocityUnits::pct);
-        if(Controller1.ButtonR1.pressing() || Controller1.ButtonR2.pressing()) {
+        if(Controller1.ButtonR1.pressing()){
+            shouldShoot = true;
+        } else if (Controller1.ButtonR2.pressing()){
+            shouldShoot = false;
+        }
+        if(shouldShoot) {
             //...Spin the shooter motor forward.
             if(ShooterMotor.velocity(velocityUnits::pct) < 90){
                 powerUpShooter(currentShooterSpeedPCT);

@@ -12,20 +12,20 @@ motor Feeder = motor(PORT20);
 motor IntakeMotor = motor(PORT3);
 motor ShooterMotor = motor(PORT7, false);
 controller Controller1 = controller();
-vision::signature BLUE_OBJ (1, -3657, -2305, -2982, 6227, 12743, 9484, 2.1, 0);
-vision::signature RED_OBJ (2, 6769, 10637, 8703, -2445, -577, -1511, 2.200000047683716, 0);
-vision::signature YELLOW_BALL (3, -331, 1, -165, -4739, -1117, -2928, 1, 0);
-vision::signature GREEN_FLAG (4, -4471, -3747, -4109, -6521, -5421, -5971, 4, 0);
-vision::signature SIG_5 (5, 0, 0, 0, 0, 0, 0, 3, 0);
-vision::signature SIG_6 (6, 0, 0, 0, 0, 0, 0, 3, 0);
-vision::signature SIG_7 (7, 0, 0, 0, 0, 0, 0, 3, 0);
-vision VisionSensor (PORT5, 50, BLUE_OBJ, RED_OBJ, YELLOW_BALL, GREEN_FLAG, SIG_5, SIG_6, SIG_7);
+vex::vision::signature SIG_1 (1, -47, 45, -1, -3421, -2065, -2743, 2.0999999046325684, 0);
+vex::vision::signature SIG_2 (2, 7011, 9817, 8414, -631, 659, 14, 1.7999999523162842, 0);
+vex::vision::signature SIG_3 (3, -3641, -2941, -3291, 8355, 14489, 11422, 1.2000000476837158, 0);
+vex::vision::signature GREEN_FLAG (4, -1961, -1123, -1542, -5291, -4201, -4746, 3, 0);
+vex::vision::signature SIG_5 (5, 0, 0, 0, 0, 0, 0, 3, 0);
+vex::vision::signature SIG_6 (6, 0, 0, 0, 0, 0, 0, 3, 0);
+vex::vision::signature SIG_7 (7, 0, 0, 0, 0, 0, 0, 3, 0);
+vex::vision VisionSensor (PORT5, 50, SIG_1, SIG_2, SIG_3, GREEN_FLAG, SIG_5, SIG_6, SIG_7);
 
 const bool isProgrammingSkillsChallenge = false;
 
-const bool shouldRunAuton = true;
 const bool justDriveStraight = false;
 // Robot starting position
 const bool isBlue = false;
-const bool isRight = false;
-
+const bool isRed = false;
+const bool isFront = false;
+const bool isBack = false;
