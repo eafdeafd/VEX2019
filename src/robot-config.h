@@ -22,10 +22,7 @@ vex::vision::signature SIG_7 (7, 0, 0, 0, 0, 0, 0, 3, 0);
 vex::vision VisionSensor (PORT5, 50, SIG_1, SIG_2, SIG_3, GREEN_FLAG, SIG_5, SIG_6, SIG_7);
 
 const bool isProgrammingSkillsChallenge = false;
-
-const bool justDriveStraight = false;
+const bool NO_AUTON = false;
 // Robot starting position
 const bool isBlue = false;
-const bool isRed = false;
 const bool isFront = false;
-const bool isBack = false;

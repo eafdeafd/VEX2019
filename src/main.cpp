@@ -40,16 +40,13 @@ void pre_auton( void ) {
 
 // Robot measurements
 const float wheelDiameter = 4.125; // inches
-const float turningDiameter = 17.5; //inches (top left wheel-bottom right wheel)
+const float turningDiameter = 17.5; //inches (TODO: re-measure horizontally)
 const float gearRatio = 1.0; // 1 turns of motor/turns of wheel
 const float wheelCircumference = wheelDiameter * 3.141592653589;
 const float inchesPerDegree = wheelCircumference / 360.0;
-//calibration
-const float encoderTicksPerDegree = turningDiameter/wheelDiameter; // 3.135
-//1110 ticks = 360 Degrees
-//573 ticks = 180 degrees
-//283 ticks = 90 degrees
-//encoderTicksPerDegree = 283 / 90 or 1110 / 360 or 573 / 180
+// should be turningDiameter/wheelDiameter
+// Didn't work so 3.135 measured experimentally
+const float encoderTicksPerDegree = 3.135;
 
 void runIntake(float intakeSpeed){
     IntakeMotor.spin(directionType::fwd, intakeSpeed, velocityUnits::pct);
@@ -91,33 +88,27 @@ void powerUpShooter(float velocityPCT){
 
 void autoDriveForward( float inches, float power ) { // distance in inches
     float degreesTurn = inches / inchesPerDegree * gearRatio;
+    
     Controller1.Screen.print(inches);
     if(inches < 0){
         Brain.Screen.print("Backwards");
+        degreesTurn *= -1;
+        // TODO: run tests and hopefully remove
         LeftFrontMotor.setReversed(true);
         LeftBackMotor.setReversed(true);
         RightFrontMotor.setReversed(false);
         RightBackMotor.setReversed(false);
-
-        LeftFrontMotor.startRotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-        LeftBackMotor.startRotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-
-        RightFrontMotor.startRotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-        RightBackMotor.rotateFor(-degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-    } else {
-        LeftFrontMotor.setReversed(false);
-        LeftBackMotor.setReversed(false);
-        RightFrontMotor.setReversed(true);
-        RightBackMotor.setReversed(true);
-        LeftFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-        LeftBackMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-
-        RightFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-        RightBackMotor.rotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
     }
-}
-    // don't wait for completion so that other wheel can turn at same time
-    
+    LeftFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+    LeftBackMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+    RightFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+    RightBackMotor.rotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
+
+    LeftBackMotor.setReversed(false);
+    LeftFrontMotor.setReversed(false);
+    RightBackMotor.setReversed(true);
+    RightFrontMotor.setReversed(true);
+}    
 
 void autoTurn( float degrees ) {
     // Note: +90 degrees is a right turn
@@ -200,57 +191,50 @@ void pointTo(vision::signature sig) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous( void ) {
+    if (NO_AUTON) return;
+    
     if(isFront){
+        // Spin up while driving to flag
         ShooterMotor.spin(directionType::fwd, 100, velocityUnits::pct);
         autoDriveForward(24, 25);
         task::sleep(3000);
 
+        // Run the intake and feeder to shoot
         IntakeMotor.startRotateFor(100, rotationUnits::rev, 100, velocityUnits::pct);
         Feeder.startRotateFor(10, rotationUnits::rev, 60, velocityUnits::pct);
         task::sleep(2000);
         IntakeMotor.stop(brakeType::coast);
         Feeder.stop(brakeType::coast);
         ShooterMotor.stop(brakeType::coast);
+        
+        // Drive forward to hit bottom flag
         autoDriveForward(24, 30);
+        
+        // Drive back to get in position for parking
         autoDriveForward(-24, 50);
-        //if(isBlue){
-        //    autoTurn(-80);
-        //} else if(isRed){
-        //    autoTurn(80);
-        //}
-        //autoDriveForward(-6, 50);
-        //ArmMotor.spin(directionType::rev, 20, velocityUnits::pct);
-        //task::sleep(1000);
-        //ArmMotor.spin(directionType::fwd, 20, velocityUnits::pct);
-        //autoDriveForward(12, 50);
-        
-        //if(isBlue){
-        //    autoTurn(80);
-        //} else if(isRed){
-        //    autoTurn(-80);
-        //}
-        
         autoDriveForward(-50, 100);
         
+        // Turn to platform
         if(isBlue){
             autoTurn(-90);
-        } else if (isRed){
+        } else { // red side
             autoTurn(90);
         }
 
+        // Raise arm for parking
         ArmMotor.spin(directionType::rev, 20, velocityUnits::pct);
         task::sleep(500);
         ArmMotor.stop(brakeType::brake);
         
-        autoDriveForward(-80, 100);
+        // Drive on to platform to park
+        autoDriveForward(-80, 100); // negative because the bot is backwards now
 
-    } else if(isBack){
-        autoDriveForward(-24, 75);
-        IntakeMotor.spin(directionType::fwd, 100, velocityUnits::pct);
-        autoDriveForward(-12, 75);
-        task::sleep(1000);
-        return;
-    } else {
+    } else { // in the back
+        // Drive straight to intake ball beneath disk
+        runIntake(127.0);        
+        autoDriveForward( 3.3 * 12, 50.0 );
+        IntakeMotor.rotateFor(2.0, vex::timeUnits::sec, 127.0, vex::velocityUnits::pct);
+        runIntake(0.0);
         return;
     }
 }
@@ -263,18 +247,7 @@ void autonomous( void ) {
 /*---------------------------------------------------------------------------*/
 
 void programmingSkills ( void ) {
-    // Drive forward
-    // Turn towards flag
-    // Finish pointing
-    // Shoot the ball
-    // Drive forward
-    // Back up
-    // Turn right
-    // Back Up to align and get a solid starting position
-    // Drive forward and intake
-    // Back up
-    // Turn right
-    // Drive forward to park
+    // TODO: fill out
 }
 
 /*---------------------------------------------------------------------------*/
@@ -288,10 +261,6 @@ void programmingSkills ( void ) {
 /*---------------------------------------------------------------------------*/
 
 void usercontrol( void ) {
-    LeftBackMotor.setReversed(false);
-    LeftFrontMotor.setReversed(false);
-    RightBackMotor.setReversed(true);
-    RightFrontMotor.setReversed(true);
     //Use these variables to set the speed of the arm, intake, and shooter.
     int armSpeedPCT = 20;
     int intakeSpeedPCT = 100;
