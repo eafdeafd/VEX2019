@@ -1,4 +1,5 @@
 #include "robot-config.h"
+#include <cmath>
 /*---------------------------------------------------------------------------                                        
         Description: Team 2585's VEX Control Software for 2018-19          
 
@@ -68,14 +69,25 @@ void runFeeder(float feederSpeed){
     }
 }
 
-void runDrive(float powerPCT, float rotationPCT) {
+void runDriveTank(float leftPowerPCT, float rightPowerPCT, bool isReversed) {
+    if (isReversed) {
+        leftPowerPCT *= -1;
+        rightPowerPCT *= -1;
+    }
+    LeftBackMotor.spin(directionType::fwd, leftPowerPCT, velocityUnits::pct);
+    LeftFrontMotor.spin(directionType::fwd, leftPowerPCT, velocityUnits::pct);
+
+    RightBackMotor.spin(directionType::fwd, rightPowerPCT, velocityUnits::pct);
+    RightFrontMotor.spin(directionType::fwd, rightPowerPCT, velocityUnits::pct);
+}
+
+void runDriveArcade(float powerPCT, float rotationPCT, bool isReversed) {
     //positive rotation --> turning right
     //negative rotation --> turning left
-    LeftBackMotor.spin(directionType::fwd, powerPCT + rotationPCT, velocityUnits::pct);
-    LeftFrontMotor.spin(directionType::fwd, powerPCT + rotationPCT, velocityUnits::pct);
-
-    RightBackMotor.spin(directionType::fwd, powerPCT - rotationPCT, velocityUnits::pct);
-    RightFrontMotor.spin(directionType::fwd, powerPCT - rotationPCT, velocityUnits::pct);
+    if (isReversed) {
+        powerPCT *= -1;
+    }
+    runDriveTank(powerPCT + rotationPCT, powerPCT - rotationPCT, false);
 }
 
 void powerDownShooter(float velocityPCT){
@@ -152,14 +164,14 @@ void pointTo(vision::signature sig) {
             //where was the largest thing?
             if(VisionSensor.largestObject.centerX < screenMiddleX - 5) {
                 //on the left, turn left
-                runDrive(0, -10);
+                runDriveArcade(0, -10, false);
             } else if (VisionSensor.largestObject.centerX > screenMiddleX + 5) {
                 //on the right, turn right
-                runDrive(0, 10);
+                runDriveArcade(0, 10, false);
             } else {
                 //in the middle, we're done lining up
                 isLinedUp = true;
-                runDrive(0, 0);
+                runDriveArcade(0, 0, false);
             }
         } else {
             return;
@@ -278,13 +290,22 @@ void usercontrol( void ) {
         // Each time through the loop your program should update motor + servo
 
         //Drive Control
+
+        // Arcade Control
         int powerPCT = Controller1.Axis3.value();
         int rotationPCT = Controller1.Axis1.value() * 0.25;
 
-        if (isReversed) {
-            powerPCT *= -1;
-        }
-        runDrive(powerPCT, rotationPCT);
+        runDriveArcade(powerPCT, rotationPCT, isReversed);
+        // Tank Control
+        /*
+        float leftPCT = Controller1.Axis3.value();
+        float rightPCT = Controller1.Axis2.value();
+
+        leftPCT = 100 * pow(leftPCT/100, 3);
+        rightPCT = 100 * pow(rightPCT/100, 3);
+        
+        runDriveTank(leftPCT, rightPCT, isReversed);
+        */
 
         if (Controller1.ButtonUp.pressing() && !wasUpPressed) {
             // Change to forward
