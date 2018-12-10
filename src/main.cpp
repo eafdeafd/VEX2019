@@ -88,26 +88,11 @@ void powerUpShooter(float velocityPCT){
 
 void autoDriveForward( float inches, float power ) { // distance in inches
     float degreesTurn = inches / inchesPerDegree * gearRatio;
-    
-    Controller1.Screen.print(inches);
-    if(inches < 0){
-        Brain.Screen.print("Backwards");
-        degreesTurn *= -1;
-        // TODO: run tests and hopefully remove
-        LeftFrontMotor.setReversed(true);
-        LeftBackMotor.setReversed(true);
-        RightFrontMotor.setReversed(false);
-        RightBackMotor.setReversed(false);
-    }
+
     LeftFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
     LeftBackMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
     RightFrontMotor.startRotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
     RightBackMotor.rotateFor(degreesTurn, rotationUnits::deg, power, velocityUnits::pct);
-
-    LeftBackMotor.setReversed(false);
-    LeftFrontMotor.setReversed(false);
-    RightBackMotor.setReversed(true);
-    RightFrontMotor.setReversed(true);
 }    
 
 void autoTurn( float degrees ) {
@@ -248,6 +233,11 @@ void autonomous( void ) {
 
 void programmingSkills ( void ) {
     // TODO: fill out
+    //autoTurn(90);
+    //autoTurn(-90);
+
+    //autoDriveForward(12, 50);
+    //autoDriveForward(-12, 50);
 }
 
 /*---------------------------------------------------------------------------*/
